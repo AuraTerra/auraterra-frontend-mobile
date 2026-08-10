@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AuraTerra Mobile</title>
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+
+    <!-- 📱 CABECERA DE LA APP MÓVIL -->
+    <header class="app-header">
+        <div class="header-content">
+            <span class="app-badge">📲 AuraTerra Mobile</span>
+            <h1 class="app-title">AgroClima Móvil</h1>
+        </div>
+    </header>
+
+    <!-- 🔍 BUSCADOR MÓVIL OPTIMIZADO PARA PANTALLAS TÁCTILES -->
+    <main class="app-container">
+        <section class="search-card">
+            <label for="inputCiudadMobile" class="search-label">Localidad de Monitoreo:</label>
+            <div class="search-box">
+                <input type="text" id="inputCiudadMobile" placeholder="Ej: Crespo, Entre Ríos, AR" value="Crespo, Entre Ríos, AR">
+                <button id="btnBuscarMobile" class="btn-primary">🔍</button>
+            </div>
+            <button id="btnGpsMobile" class="btn-gps">📍 Usar mi Ubicación GPS</button>
+        </section>
+
+        <!-- ☀️ TARJETA DEL CLIMA ACTUAL -->
+        <section class="weather-card" id="cardClimaMobile">
+            <div class="card-header">
+                <h2>Condiciones en Tiempo Real</h2>
+                <span class="status-dot"></span>
+            </div>
+            <div id="bloqueClimaActualMobile" class="card-body">
+                <p class="loading-text">⏳ Conectando con servidor de API...</p>
+            </div>
+        </section>
+
+        <!-- 📊 PRONÓSTICO EXTENDIDO RÁPIDO (PRÓXIMAS HORAS) -->
+        <section class="weather-card">
+            <div class="card-header">
+                <h2>Pronóstico Telemétrico</h2>
+            </div>
+            <div id="bloquePronosticoMobile" class="forecast-scroll">
+                <p class="loading-text">Cargando datos extendidos...</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- 🦶 BARRA DE NAVEGACIÓN INFERIOR (BOTTOM NAVIGATION) -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="location.reload()">
+            <span class="nav-icon">🌤️</span>
+            <span class="nav-label">Clima</span>
+        </button>
+        <button class="nav-item" id="btnInfoMobile">
+            <span class="nav-icon">ℹ️</span>
+            <span class="nav-label">Info</span>
+        </button>
+    </nav>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
