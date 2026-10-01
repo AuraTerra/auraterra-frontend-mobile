@@ -1,6 +1,6 @@
 // 🌐 CONEXIÓN AL BACKEND API
 // Apunta a la carpeta donde vive tu repositorio 'auraterra-backend-api' en XAMPP:
-const API_URL = "http://localhost/auraterra-backend-api";
+const API_URL = "http://localhost/auraTerraMayo/PUBLIC"
 
 window.addEventListener('DOMContentLoaded', () => {
     const inputCiudad = document.getElementById('inputCiudadMobile');
