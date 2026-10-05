@@ -4,63 +4,169 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AuraTerra Mobile</title>
-    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="./css/mobile.css">
 </head>
 <body>
+    <div id="toastApp" class="toast-mobile"></div>
 
-    <!-- 📱 CABECERA DE LA APP MÓVIL -->
-    <header class="app-header">
-        <div class="header-content">
-            <span class="app-badge">📲 AuraTerra Mobile</span>
-            <h1 class="app-title">AgroClima Móvil</h1>
+    <!-- VISTA 1: ACCESO / LOGIN MOBILE -->
+    <section id="vistaAuthMobile" class="vista-mobile activa">
+        <header class="header-auth-mobile">
+            <h1 class="logo-titulo">AuraTerra</h1>
+            <p class="eslogan-sub">"Los 21gr del timo que acompañan el éxito de la organización de tu actividad al aire libre"</p>
+        </header>
+
+        <main class="contenedor-auth-card">
+            <div class="tabs-mobile">
+                <button class="tab-btn-m activa" id="tabLoginM" onclick="cambiarTabMobile('login')">Ingresar</button>
+                <button class="tab-btn-m" id="tabRegisterM" onclick="cambiarTabMobile('registro')">Registrarse</button>
+            </div>
+
+            <!-- Form Login -->
+            <form id="formLoginMobile" onsubmit="iniciarLoginMobile(event)">
+                <div class="campo-mobile">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="emailLoginM" required placeholder="ejemplo@correo.com" autocomplete="email">
+                </div>
+                <div class="campo-mobile">
+                    <label>Contraseña</label>
+                    <div class="input-con-ojo">
+                        <input type="password" id="passLoginM" required placeholder="••••••••" autocomplete="current-password">
+                        <button type="button" class="btn-ojo" onclick="toggleOjoPass('passLoginM', this)">🙈</button>
+                    </div>
+                </div>
+
+                <div class="checkbox-recordar-m">
+                    <input type="checkbox" id="checkRecordarM" checked>
+                    <label for="checkRecordarM">Mantener sesión iniciada</label>
+                </div>
+
+                <button type="submit" class="btn-primario-m">Entrar al Clima ➔</button>
+            </form>
+
+            <!-- Form Registro -->
+            <form id="formRegMobile" style="display:none;" onsubmit="iniciarRegistroMobile(event)">
+                <div class="campo-mobile">
+                    <label>Nombre y Apellido</label>
+                    <input type="text" id="nombreRegM" required placeholder="Tu Nombre">
+                </div>
+                <div class="campo-mobile">
+                    <label>Correo Electrónico</label>
+                    <input type="email" id="emailRegM" required placeholder="ejemplo@correo.com" autocomplete="email">
+                </div>
+                <div class="campo-mobile">
+                    <label>Contraseña</label>
+                    <div class="input-con-ojo">
+                        <input type="password" id="passRegM" required placeholder="Mínimo 8 car., 1 mayús., 1 núm., 1 símb." autocomplete="new-password">
+                        <button type="button" class="btn-ojo" onclick="toggleOjoPass('passRegM', this)">🙈</button>
+                    </div>
+                </div>
+                <div class="campo-mobile">
+                    <label>Perfil de Uso</label>
+                    <select id="rolRegM" class="select-mobile">
+                        <option value="agricultor">🌾 Agro (Ley de Pulverización)</option>
+                        <option value="planificador">🎪 Eventos (Seguridad Carpas)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primario-m" style="background:#27ae60;">Crear Cuenta ➔</button>
+            </form>
+
+            <div id="msgAuthMobile" class="msg-auth-error"></div>
+        </main>
+    </section>
+
+    <!-- VISTA 2: DASHBOARD / CLIMA MOBILE -->
+    <section id="vistaDashboardMobile" class="vista-mobile">
+        <header class="topbar-app-mobile">
+            <div class="marca-app">
+                <span class="punto-online"></span>
+                <strong>AuraTerra</strong>
+            </div>
+            <div class="acciones-usuario-m">
+                <span id="badgeRolUsuarioM" class="badge-rol-m">Agro</span>
+                <button id="btnCerrarSesionM" class="btn-icono-m" title="Cerrar sesión" onclick="cerrarSesionMobile()">🚪</button>
+            </div>
+        </header>
+
+        <main class="contenedor-app-mobile">
+            <!-- Barra de Búsqueda Táctil -->
+            <div class="barra-busqueda-m">
+                <input type="text" id="inputCiudadM" placeholder="Ej: Crespo, Entre Ríos, AR">
+                <div class="fila-botones-busq-m">
+                    <button id="btnBuscarM" class="btn-busq-grande" onclick="buscarClimaMobile()">🔍 Buscar Clima</button>
+                    <button class="btn-icono-accion-m" onclick="activarGpsMobile()" title="Mi Ubicación">📍</button>
+                    <button id="btnFavM" class="btn-icono-accion-m" onclick="guardarFavoritoMobile()" title="Guardar Favorito">★</button>
+                </div>
+            </div>
+
+            <!-- Menú Rápido de Favoritos en Pills Deslizables -->
+            <div id="contenedorPillsFavsM" class="carrusel-favs-m"></div>
+
+            <!-- Tarjeta Clima Actual -->
+            <div class="card-m" id="cardClimaActualM">
+                <div class="encabezado-card-m">
+                    <span id="ciudadLabelM" class="localidad-m">📍 Cargando...</span>
+                </div>
+                <div class="temperatura-gigante-m" id="tempPrincipalM">--°</div>
+                <div class="estado-cielo-m" id="descClimaM">Sincronizando...</div>
+                
+                <div class="grilla-detalles-m">
+                    <div class="item-detalle-m">
+                        <span class="icono-det">💧</span>
+                        <div>
+                            <small>Humedad</small>
+                            <strong id="humedadM">--%</strong>
+                        </div>
+                    </div>
+                    <div class="item-detalle-m">
+                        <span class="icono-det">💨</span>
+                        <div>
+                            <small>Viento</small>
+                            <strong id="vientoM">-- km/h</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pastilla-consenso-m" id="consensoPillM">
+                    ⚡ Consenso: 3 APIs Activas
+                </div>
+            </div>
+
+            <!-- Tarjeta Control Operativo / Legal -->
+            <div class="card-m card-alerta-m" id="cardLegalM">
+                <h3 id="tituloLegalM">⚖️ Operación</h3>
+                <div id="contenidoLegalM" class="texto-legal-m">Evaluando vientos y normativa...</div>
+            </div>
+
+            <!-- Pronóstico Horario Deslizable -->
+            <div class="card-m">
+                <h3>📅 Próximos Días</h3>
+                <div class="carrusel-dias-m" id="carruselPronosticoM">
+                    <p style="color:#718096; padding:10px;">Cargando tendencias...</p>
+                </div>
+            </div>
+
+            <!-- Recomendación Agronómica / Logística -->
+            <div class="card-m card-info-m">
+                <h3 id="tituloModuloM">🌱 Recomendación de Labor</h3>
+                <div id="contenidoModuloM" class="cuerpo-info-m">Cargando análisis regional...</div>
+            </div>
+        </main>
+    </section>
+
+    <!-- MODAL 2FA MOBILE -->
+    <div class="modal-2fa-overlay-m" id="modal2FAMobile">
+        <div class="modal-2fa-card-m">
+            <span style="font-size:2.8rem;">🔐</span>
+            <h3>Doble Factor (2FA)</h3>
+            <p>Ingresá el código de verificación de 6 dígitos:</p>
+            <div class="caja-otp-muestra" id="otpMuestraM">Código: ------</div>
+            <input type="text" inputmode="numeric" class="input-otp-m" id="inputOtpM" maxlength="6" placeholder="000000">
+            <button class="btn-primario-m" onclick="verificarOtpMobile()">Confirmar y Entrar ➔</button>
+            <p id="errorOtpM" class="error-otp-m" style="display:none;">Código incorrecto. Reintentá.</p>
         </div>
-    </header>
+    </div>
 
-    <!-- 🔍 BUSCADOR MÓVIL OPTIMIZADO PARA PANTALLAS TÁCTILES -->
-    <main class="app-container">
-        <section class="search-card">
-            <label for="inputCiudadMobile" class="search-label">Localidad de Monitoreo:</label>
-            <div class="search-box">
-                <input type="text" id="inputCiudadMobile" placeholder="Ej: Crespo, Entre Ríos, AR" value="Crespo, Entre Ríos, AR">
-                <button id="btnBuscarMobile" class="btn-primary">🔍</button>
-            </div>
-            <button id="btnGpsMobile" class="btn-gps">📍 Usar mi Ubicación GPS</button>
-        </section>
-
-        <!-- ☀️ TARJETA DEL CLIMA ACTUAL -->
-        <section class="weather-card" id="cardClimaMobile">
-            <div class="card-header">
-                <h2>Condiciones en Tiempo Real</h2>
-                <span class="status-dot"></span>
-            </div>
-            <div id="bloqueClimaActualMobile" class="card-body">
-                <p class="loading-text">⏳ Conectando con servidor de API...</p>
-            </div>
-        </section>
-
-        <!-- 📊 PRONÓSTICO EXTENDIDO RÁPIDO (PRÓXIMAS HORAS) -->
-        <section class="weather-card">
-            <div class="card-header">
-                <h2>Pronóstico Telemétrico</h2>
-            </div>
-            <div id="bloquePronosticoMobile" class="forecast-scroll">
-                <p class="loading-text">Cargando datos extendidos...</p>
-            </div>
-        </section>
-    </main>
-
-    <!-- 🦶 BARRA DE NAVEGACIÓN INFERIOR (BOTTOM NAVIGATION) -->
-    <nav class="bottom-nav">
-        <button class="nav-item active" onclick="location.reload()">
-            <span class="nav-icon">🌤️</span>
-            <span class="nav-label">Clima</span>
-        </button>
-        <button class="nav-item" id="btnInfoMobile">
-            <span class="nav-icon">ℹ️</span>
-            <span class="nav-label">Info</span>
-        </button>
-    </nav>
-
-    <script src="js/app.js"></script>
+    <script src="./js/app.js"></script>
 </body>
 </html>
