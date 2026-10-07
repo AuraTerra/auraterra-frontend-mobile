@@ -1,7 +1,6 @@
-// Configuración dinámica: conecta al backend local o de hosting
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost/auraterra-backend-api'
-    : '/api';
+    ? 'http://localhost/auraterra-backend-api/index.php'
+    : '/api/index.php';
 
 let ciudadActualM = "Crespo, Entre Ríos, AR";
 let datosUsuarioM = null;
@@ -55,7 +54,7 @@ async function iniciarLoginMobile(e) {
     msg.textContent = 'Conectando con AuraTerra...';
 
     try {
-        const res = await fetch(`${API_URL}/login`, {
+        const res = await fetch(`${API_URL}?ruta=/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
@@ -127,14 +126,14 @@ async function iniciarRegistroMobile(e) {
     msg.textContent = 'Creando tu cuenta...';
 
     try {
-        const res = await fetch(`${API_URL}/register`, {
+        const res = await fetch(`${API_URL}?ruta=/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre, email, password, rol })
         });
         const data = await res.json();
         if (data.status === 'success') {
-            datosUsuarioM = { nombre, email, rol };
+            datosUsuarioM = { nombre, email, rol, estado: 'prueba' };
             localStorage.setItem('usuario_mobile', JSON.stringify(datosUsuarioM));
             mostrarDashboardMobile();
         } else {
@@ -163,38 +162,69 @@ function mostrarDashboardMobile() {
     document.getElementById('vistaAuthMobile').classList.remove('activa');
     document.getElementById('vistaDashboardMobile').classList.add('activa');
     document.getElementById('badgeRolUsuarioM').textContent = datosUsuarioM?.rol || 'Agro';
-    consultarClimaCompletoMobile(ciudadActualM);
+    
+    // 🛰️ Detección automática de ubicación por GPS al iniciar el dashboard
+    iniciarUbicacionAutomaticaMobile();
+}
+
+function iniciarUbicacionAutomaticaMobile() {
+    if (navigator.geolocation) {
+        lanzarToastMobile("🛰️ Detectando ubicación en tiempo real...");
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const lat = pos.coords.latitude.toFixed(4);
+                const lon = pos.coords.longitude.toFixed(4);
+                consultarClimaPorCoordenadasMobile(lat, lon);
+            },
+            () => {
+                // Si el permiso es rechazado o no hay GPS, carga la ciudad predeterminada
+                consultarClimaCompletoMobile(ciudadActualM);
+            },
+            { enableHighAccuracy: true, timeout: 7000 }
+        );
+    } else {
+        consultarClimaCompletoMobile(ciudadActualM);
+    }
 }
 
 // 3. CONSULTA CLIMÁTICA Y REGLAMENTACIÓN MOBILE
+async function consultarClimaPorCoordenadasMobile(lat, lon) {
+    lanzarToastMobile("⏳ Sincronizando telemetría GPS...");
+    try {
+        const resAct = await fetch(`${API_URL}?ruta=/clima/actual&lat=${lat}&lon=${lon}`);
+        const dataAct = await resAct.json();
+        if (dataAct.status === 'success' || dataAct.data) {
+            const clima = dataAct.data;
+            ciudadActualM = clima.ubicacion || `${lat}, ${lon}`;
+            document.getElementById('inputCiudadM').value = ciudadActualM;
+            aplicarDatosClimaActualMobile(clima);
+        }
+
+        const resPron = await fetch(`${API_URL}?ruta=/clima/pronostico&lat=${lat}&lon=${lon}`);
+        const dataPron = await resPron.json();
+        if (dataPron.ok !== false && Array.isArray(dataPron.data)) {
+            renderizarPronosticoMobile(dataPron.data);
+        }
+    } catch(e) {
+        consultarClimaCompletoMobile(ciudadActualM);
+    }
+}
+
 async function consultarClimaCompletoMobile(ciudad) {
     ciudadActualM = ciudad;
     document.getElementById('inputCiudadM').value = ciudad;
     lanzarToastMobile("⏳ Sincronizando telemetría...");
 
     try {
-        // Clima Actual (Consenso)
-        const resAct = await fetch(`${API_URL}/clima/actual?ciudad=${encodeURIComponent(ciudad)}`);
+        // Clima Actual
+        const resAct = await fetch(`${API_URL}?ruta=/clima/actual&ciudad=${encodeURIComponent(ciudad)}`);
         const dataAct = await resAct.json();
         if (dataAct.status === 'success' || dataAct.data) {
-            const clima = dataAct.data;
-            document.getElementById('ciudadLabelM').textContent = `📍 ${clima.ubicacion || ciudad}`;
-            document.getElementById('tempPrincipalM').textContent = `${Math.round(clima.temperatura)}°C`;
-            document.getElementById('descClimaM').textContent = clima.descripcion;
-            document.getElementById('humedadM').textContent = `${clima.humedad}%`;
-            
-            const vKmh = clima.viento_kmh || Math.round(clima.viento * 3.6);
-            document.getElementById('vientoM').textContent = `${vKmh} km/h`;
-            
-            const fuentes = clima.consenso ? clima.consenso.fuentes_consultadas : 3;
-            document.getElementById('consensoPillM').textContent = `⚡ Consenso: ${fuentes} APIs en vivo`;
-
-            // Marco Legal y Reglamentación Dinámica
-            evaluarMarcoLegalMobile(vKmh, ciudad);
+            aplicarDatosClimaActualMobile(dataAct.data);
         }
 
         // Pronóstico
-        const resPron = await fetch(`${API_URL}/clima/pronostico?ciudad=${encodeURIComponent(ciudad)}`);
+        const resPron = await fetch(`${API_URL}?ruta=/clima/pronostico&ciudad=${encodeURIComponent(ciudad)}`);
         const dataPron = await resPron.json();
         if (dataPron.ok !== false && Array.isArray(dataPron.data)) {
             renderizarPronosticoMobile(dataPron.data);
@@ -202,6 +232,21 @@ async function consultarClimaCompletoMobile(ciudad) {
     } catch(err) {
         lanzarToastMobile("⚠️ Conexión en espera...");
     }
+}
+
+function aplicarDatosClimaActualMobile(clima) {
+    document.getElementById('ciudadLabelM').textContent = `📍 ${clima.ubicacion || ciudadActualM}`;
+    document.getElementById('tempPrincipalM').textContent = `${Math.round(clima.temperatura)}°C`;
+    document.getElementById('descClimaM').textContent = clima.descripcion;
+    document.getElementById('humedadM').textContent = `${clima.humedad}%`;
+    
+    const vKmh = clima.viento_kmh || Math.round(clima.viento * 3.6);
+    document.getElementById('vientoM').textContent = `${vKmh} km/h`;
+    
+    const fuentes = clima.consenso ? clima.consenso.fuentes_consultadas : 3;
+    document.getElementById('consensoPillM').textContent = `⚡ Consenso: ${fuentes} APIs en vivo`;
+
+    evaluarMarcoLegalMobile(vKmh, clima.ubicacion || ciudadActualM);
 }
 
 function evaluarMarcoLegalMobile(vKmh, ciudad) {
@@ -216,7 +261,7 @@ function evaluarMarcoLegalMobile(vKmh, ciudad) {
     if (rol === 'planificador') {
         tit.innerText = "⛺ Seguridad de Montajes y Carpas";
         cont.innerHTML = vKmh > 18 
-            ? "<b style='color:#e53e3e;'>🚫 RÁFAGAS ALARMANTES (>18 km/h).</b> Suspender montajes verticales y asegurar gazebos."
+            ? "<b style='color:#e53e3e;'>🚫 RÁFAGAS ALARMANTES (>18 km/h).</b> Suspender montajes verticales y asegurar gazebos." 
             : "<b style='color:#27ae60;'>✅ VIENTO CONTROLADO.</b> Estructuras y sonido al aire libre seguros.";
     } else {
         if (esER) {
@@ -266,8 +311,10 @@ function renderizarPronosticoMobile(lista) {
     
     let dias = {};
     lista.forEach(i => {
-        const fecha = i.dt_txt.split(' ')[0];
-        if (!dias[fecha]) dias[fecha] = i;
+        // Agrupación por día local único
+        const dLocal = new Date(i.dt * 1000);
+        const claveDia = `${dLocal.getFullYear()}-${dLocal.getMonth() + 1}-${dLocal.getDate()}`;
+        if (!dias[claveDia]) dias[claveDia] = i;
     });
 
     Object.keys(dias).slice(0, 5).forEach(f => {
@@ -300,15 +347,10 @@ function activarGpsMobile() {
         navigator.geolocation.getCurrentPosition(pos => {
             const lat = pos.coords.latitude.toFixed(4);
             const lon = pos.coords.longitude.toFixed(4);
-            fetch(`${API_URL}/clima/actual?lat=${lat}&lon=${lon}`)
-                .then(r => r.json())
-                .then(d => {
-                    const loc = d.data?.ubicacion || `${lat}, ${lon}`;
-                    consultarClimaCompletoMobile(loc);
-                });
+            consultarClimaPorCoordenadasMobile(lat, lon);
         }, () => {
             lanzarToastMobile("⚠️ GPS no disponible");
-        });
+        }, { enableHighAccuracy: true });
     }
 }
 
