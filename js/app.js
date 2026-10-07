@@ -1,6 +1,4 @@
-const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost/auraterra-backend-api/index.php'
-    : '/api/index.php';
+const API_URL = `${window.location.protocol}//${window.location.hostname}/auraterra-backend-api/index.php`;
 
 let ciudadActualM = "Crespo, Entre Ríos, AR";
 let datosUsuarioM = null;
