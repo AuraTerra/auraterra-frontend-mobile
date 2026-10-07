@@ -5,44 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AuraTerra Mobile</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0f4f8; color: #2d3748; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; margin: 0; padding: 0; transition: background-color 0.3s ease, color 0.3s ease; }
         
-        /* Contenedores de vista */
+        /* Paleta Modo Día */
+        :root {
+            --bg-body: #f0f4f8;
+            --bg-card: #ffffff;
+            --bg-card-alt: #f8fafc;
+            --border-card: #e2e8f0;
+            --text-main: #2d3748;
+            --text-sub: #4a5568;
+            --text-muted: #718096;
+            --shadow-card: 0 4px 12px rgba(0,0,0,0.05);
+            --header-bg: #ffffff;
+            --input-bg: #ffffff;
+        }
+
+        /* Paleta Modo Noche (20:00 hs a 06:30 hs) */
+        body.modo-noche {
+            --bg-body: #0b1120;
+            --bg-card: #1e293b;
+            --bg-card-alt: #0f172a;
+            --border-card: #334155;
+            --text-main: #f1f5f9;
+            --text-sub: #cbd5e1;
+            --text-muted: #94a3b8;
+            --shadow-card: 0 4px 14px rgba(0,0,0,0.35);
+            --header-bg: #1e293b;
+            --input-bg: #0f172a;
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-body); color: var(--text-main); -webkit-tap-highlight-color: transparent; }
+        
         .vista-mobile { display: none; padding: 16px; min-height: 100vh; }
         .vista-mobile.activa { display: block; }
         
-        /* Encabezado */
-        .header-auth-m { text-align: center; padding: 20px 10px 15px 10px; }
+        .header-auth-m { text-align: center; padding: 18px 10px 14px 10px; }
         .logo-m { max-width: 220px; width: 70%; height: auto; display: block; margin: 0 auto; }
-        .eslogan-auth-m { font-style: italic; color: #4a5568; font-size: 0.95rem; margin-top: 10px; line-height: 1.4; }
+        .eslogan-auth-m { font-style: italic; color: var(--text-muted); font-size: 0.95rem; margin-top: 10px; line-height: 1.4; }
 
-        /* Pestañas */
-        .tabs-auth-m { display: flex; gap: 10px; margin: 15px 0 20px 0; }
-        .tab-m { flex: 1; height: 50px; border-radius: 12px; border: none; background: #e2e8f0; font-size: 1.1rem; font-weight: 700; color: #4a5568; cursor: pointer; }
+        .tabs-auth-m { display: flex; gap: 10px; margin: 15px 0 18px 0; }
+        .tab-m { flex: 1; height: 50px; border-radius: 12px; border: none; background: #cbd5e1; font-size: 1.05rem; font-weight: 700; color: #1e293b; cursor: pointer; }
         .tab-m.activa { background: #3182ce; color: #ffffff; }
 
-        /* Tarjetas de los dos pilares */
         .info-pilares-box { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; text-align: left; }
-        .pilar-card-m { padding: 14px 16px; border-radius: 14px; border-left: 6px solid; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .pilar-agro { background: #f0fff4; border-color: #38a169; }
-        .pilar-events { background: #ebf8ff; border-color: #3182ce; }
+        .pilar-card-m { padding: 14px 16px; border-radius: 14px; border-left: 6px solid; box-shadow: var(--shadow-card); background: var(--bg-card); }
+        .pilar-agro { border-color: #38a169; }
+        .pilar-events { border-color: #3182ce; }
         .pilar-card-m h4 { margin: 0 0 6px 0; font-size: 1.15rem; }
-        .pilar-agro h4 { color: #22543d; }
-        .pilar-events h4 { color: #2b6cb0; }
-        .pilar-card-m p { margin: 0; font-size: 0.95rem; color: #4a5568; line-height: 1.45; }
+        .pilar-agro h4 { color: #38a169; }
+        .pilar-events h4 { color: #3182ce; }
+        .pilar-card-m p { margin: 0; font-size: 0.95rem; color: var(--text-sub); line-height: 1.45; }
 
-        /* Campos de formulario */
         .campo-m { margin-bottom: 16px; text-align: left; }
-        .campo-m label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 1.05rem; color: #2d3748; }
-        .campo-m input, .campo-m select { width: 100%; height: 54px; border-radius: 12px; border: 1.5px solid #cbd5e0; padding: 0 16px; font-size: 1.1rem; background: #ffffff; outline: none; }
-        .campo-m input:focus, .campo-m select:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49,130,206,0.15); }
+        .campo-m label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 1.05rem; color: var(--text-main); }
+        .campo-m input, .campo-m select { width: 100%; height: 54px; border-radius: 12px; border: 1.5px solid var(--border-card); padding: 0 16px; font-size: 1.1rem; background: var(--input-bg); color: var(--text-main); outline: none; }
+        .campo-m input:focus, .campo-m select:focus { border-color: #3182ce; }
         
         .pass-wrapper-m { position: relative; display: flex; align-items: center; }
         .pass-wrapper-m input { padding-right: 52px; }
         .btn-eye-m { position: absolute; right: 6px; height: 100%; width: 44px; background: none; border: none; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        .check-recordar-m { display: flex; align-items: center; gap: 12px; margin: 18px 0; font-size: 1rem; font-weight: 600; color: #4a5568; }
+        .check-recordar-m { display: flex; align-items: center; gap: 12px; margin: 18px 0; font-size: 1rem; font-weight: 600; color: var(--text-sub); }
         .check-recordar-m input { width: 22px; height: 22px; accent-color: #3182ce; }
 
         .btn-primario-m { width: 100%; height: 56px; border-radius: 12px; border: none; background: #3182ce; color: #ffffff; font-size: 1.15rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(49,130,206,0.3); }
@@ -50,45 +74,66 @@
 
         .msg-auth-m { text-align: center; margin-top: 14px; font-size: 1.05rem; font-weight: 700; line-height: 1.4; }
 
-        /* Dashboard UI */
-        .header-dashboard-m { background: #ffffff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-radius: 14px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; }
-        .logo-pequeno-m { max-height: 40px; width: auto; }
-        .usuario-badge-m { background: #edf2f7; padding: 8px 14px; border-radius: 20px; font-weight: 700; font-size: 0.95rem; cursor: pointer; }
+        /* Dashboard */
+        .header-dashboard-m { background: var(--header-bg); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-radius: 14px; margin-bottom: 14px; box-shadow: var(--shadow-card); position: relative; border: 1px solid var(--border-card); }
+        .logo-pequeno-m { max-height: 38px; width: auto; }
+        .usuario-badge-m { background: var(--bg-card-alt); padding: 8px 14px; border-radius: 20px; font-weight: 700; font-size: 0.95rem; cursor: pointer; border: 1px solid var(--border-card); }
         
-        .dropdown-usuario-m { position: absolute; top: 60px; right: 16px; background: #ffffff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.18); padding: 14px; z-index: 99999; border: 1px solid #e2e8f0; min-width: 220px; }
+        .dropdown-usuario-m { position: absolute; top: 60px; right: 16px; background: var(--bg-card); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.25); padding: 14px; z-index: 99999; border: 1px solid var(--border-card); min-width: 220px; }
 
-        .buscador-card-m { background: #ffffff; padding: 16px; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 16px; }
-        #inputCiudadM { width: 100%; height: 56px; border-radius: 12px; border: 2px solid #cbd5e0; padding: 0 16px; font-size: 1.15rem; font-weight: 600; outline: none; margin-bottom: 10px; }
-        #inputCiudadM::placeholder { font-size: 1.05rem; color: #718096; font-weight: 500; }
+        .buscador-card-m { background: var(--bg-card); padding: 16px; border-radius: 14px; box-shadow: var(--shadow-card); margin-bottom: 14px; border: 1px solid var(--border-card); }
+        #inputCiudadM { width: 100%; height: 56px; border-radius: 12px; border: 2px solid var(--border-card); padding: 0 16px; font-size: 1.15rem; font-weight: 600; outline: none; margin-bottom: 10px; background: var(--input-bg); color: var(--text-main); }
+        #inputCiudadM::placeholder { font-size: 1.05rem; color: var(--text-muted); font-weight: 500; }
         
         .acciones-buscador-m { display: flex; gap: 8px; }
         .btn-accion-m { flex: 1; height: 50px; background: #3182ce; color: #fff; font-weight: 700; font-size: 1.05rem; border: none; border-radius: 10px; cursor: pointer; }
-        .btn-icono-m { width: 50px; height: 50px; background: #edf2f7; border: 1.5px solid #cbd5e0; border-radius: 10px; font-size: 1.3rem; cursor: pointer; }
+        .btn-icono-m { width: 50px; height: 50px; background: var(--bg-card-alt); border: 1.5px solid var(--border-card); border-radius: 10px; font-size: 1.3rem; cursor: pointer; color: var(--text-main); }
 
-        .card-meteo-m { background: #ffffff; border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        /* Banner de Notificaciones */
+        .banner-notificaciones {
+            display: none;
+            background: #ebf8ff;
+            border: 1.5px solid #bee3f8;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 14px;
+            font-size: 0.95rem;
+            color: #2b6cb0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        body.modo-noche .banner-notificaciones {
+            background: #1e3a8a;
+            border-color: #3b82f6;
+            color: #dbeafe;
+        }
+
+        .card-meteo-m { background: var(--bg-card); border-radius: 16px; padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow-card); border: 1px solid var(--border-card); }
         .cabecera-card-m { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
         .pill-consenso-m { background: #ebf8ff; color: #2b6cb0; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; }
+        body.modo-noche .pill-consenso-m { background: #1e3a8a; color: #bfdbfe; }
+        
         .cuerpo-clima-m { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
-        .temp-enorme-m { font-size: 3.6rem; font-weight: 800; color: #1a202c; line-height: 1; }
+        .temp-enorme-m { font-size: 3.6rem; font-weight: 800; color: var(--text-main); line-height: 1; }
         .detalles-actual-m { flex: 1; text-align: right; }
-        .desc-m { font-size: 1.25rem; font-weight: 700; text-transform: capitalize; color: #2d3748; margin-bottom: 6px; }
-        .metricas-sub-m { font-size: 0.95rem; color: #4a5568; display: flex; flex-direction: column; gap: 4px; }
+        .desc-m { font-size: 1.25rem; font-weight: 700; text-transform: capitalize; color: var(--text-main); margin-bottom: 6px; }
+        .metricas-sub-m { font-size: 0.95rem; color: var(--text-sub); display: flex; flex-direction: column; gap: 4px; }
 
         .carrusel-pronostico-m { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
-        .dia-chip-m { min-width: 140px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 12px; text-align: center; flex-shrink: 0; cursor: pointer; }
+        .dia-chip-m { min-width: 140px; background: var(--bg-card-alt); border: 1.5px solid var(--border-card); border-radius: 14px; padding: 12px; text-align: center; flex-shrink: 0; cursor: pointer; }
         .dia-chip-m:active { transform: scale(0.96); }
         .temp-extremos { font-size: 0.9rem; font-weight: 700; margin: 4px 0; }
         .temp-extremos .max { color: #e53e3e; }
         .temp-extremos .min { color: #3182ce; }
 
-        /* Modales */
-        .modal-mobile-sheet { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: flex-end; justify-content: center; }
+        .modal-mobile-sheet { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 999999; align-items: flex-end; justify-content: center; }
         .modal-mobile-sheet.activa { display: flex; }
-        .modal-sheet-content { background: #ffffff; width: 100%; max-height: 85vh; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 22px 18px 28px 18px; overflow-y: auto; box-shadow: 0 -10px 25px rgba(0,0,0,0.25); animation: slideUp 0.25s ease-out; text-align: left; }
+        .modal-sheet-content { background: var(--bg-card); color: var(--text-main); width: 100%; max-height: 85vh; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 22px 18px 28px 18px; overflow-y: auto; box-shadow: 0 -10px 25px rgba(0,0,0,0.35); animation: slideUp 0.25s ease-out; text-align: left; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .sheet-handle { width: 44px; height: 5px; background: #cbd5e0; border-radius: 10px; margin: 0 auto 16px auto; }
+        .sheet-handle { width: 44px; height: 5px; background: var(--border-card); border-radius: 10px; margin: 0 auto 16px auto; }
         
-        .item-horario-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 6px; border-bottom: 1px solid #edf2f7; font-size: 1rem; }
+        .item-horario-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 6px; border-bottom: 1px solid var(--border-card); font-size: 1rem; }
         .toast-app { display: none; position: fixed; bottom: 20px; left: 16px; right: 16px; background: #2d3748; color: #fff; padding: 14px 18px; border-radius: 12px; text-align: center; font-weight: 700; z-index: 9999999; }
     </style>
 </head>
@@ -120,7 +165,6 @@
             </div>
         </div>
 
-        <!-- Login -->
         <form id="formLoginMobile" onsubmit="iniciarLoginMobile(event)">
             <div class="campo-m">
                 <label>Correo Electrónico:</label>
@@ -140,7 +184,6 @@
             <button type="submit" class="btn-primario-m">Ingresar al Dashboard ➔</button>
         </form>
 
-        <!-- Registro -->
         <form id="formRegMobile" style="display: none;" onsubmit="iniciarRegistroMobile(event)">
             <div class="campo-m">
                 <label>Nombre y Apellido:</label>
@@ -176,17 +219,29 @@
             <button type="button" onclick="abrirModalInfoCorporativoMobile()" style="background:none; border:none; cursor:pointer;">
                 <img src="../auraterra-frontend-web/public/img/logoAuraTerra.jpeg" onerror="this.src='./img/logoAuraTerra.jpeg'" alt="Logo" class="logo-pequeno-m">
             </button>
-            <div class="usuario-badge-m" onclick="toggleMenuUsuarioMobile()">
-                <span id="badgeRolUsuarioM">Agro</span> ▾
+            <div style="display:flex; align-items:center; gap:8px;">
+                <span id="indicadorModoDiaNoche" style="font-size:1.2rem;">☀️</span>
+                <div class="usuario-badge-m" onclick="toggleMenuUsuarioMobile()">
+                    <span id="badgeRolUsuarioM">Agro</span> ▾
+                </div>
             </div>
             <div id="dropdownMenuMobile" class="dropdown-usuario-m" style="display:none;">
-                <div style="font-weight:bold; font-size:1rem; margin-bottom:8px; color:#2d3748;">👤 <span id="lblNombreUsuarioMenuM">Usuario</span></div>
-                <a href="#" id="linkAdminConsoleM" style="display:none; color:#3182ce; font-weight:bold; padding:8px 0; text-decoration:none; border-top:1px solid #edf2f7;" onclick="abrirModalAdminMobile(event)">⚙️ Consola Admin</a>
-                <a href="#" style="color:#e53e3e; font-weight:bold; padding:8px 0; text-decoration:none; display:block; border-top:1px solid #edf2f7; margin-top:6px;" onclick="cerrarSesionMobile(event)">Cerrar Sesión</a>
+                <div style="font-weight:bold; font-size:1rem; margin-bottom:8px; color:var(--text-main);">👤 <span id="lblNombreUsuarioMenuM">Usuario</span></div>
+                <a href="#" id="linkAdminConsoleM" style="display:none; color:#3182ce; font-weight:bold; padding:8px 0; text-decoration:none; border-top:1px solid var(--border-card);" onclick="abrirModalAdminMobile(event)">⚙️ Consola Admin</a>
+                <a href="#" style="color:#e53e3e; font-weight:bold; padding:8px 0; text-decoration:none; display:block; border-top:1px solid var(--border-card); margin-top:6px;" onclick="cerrarSesionMobile(event)">Cerrar Sesión</a>
             </div>
         </header>
 
         <main>
+            <!-- Banner para habilitar Notificaciones Push -->
+            <div class="banner-notificaciones" id="bannerHabilitarNotificaciones">
+                <div>
+                    <b>🔔 Alertas en tu Celular</b><br>
+                    <small>Recibí advertencias de viento y lluvia con 12-24hs de anticipación.</small>
+                </div>
+                <button onclick="solicitarPermisoNotificaciones()" style="background:#3182ce; color:#fff; border:none; padding:8px 12px; border-radius:8px; font-weight:700; font-size:0.85rem; cursor:pointer;">Activar</button>
+            </div>
+
             <div class="buscador-card-m">
                 <input type="text" id="inputCiudadM" placeholder="AuraTerra Clima — Ej: Crespo, Entre Ríos, AR">
                 <div class="acciones-buscador-m">
@@ -208,8 +263,9 @@
                     <div class="detalles-actual-m">
                         <div id="descClimaM" class="desc-m">Sincronizando...</div>
                         <div class="metricas-sub-m">
-                            <span>💧 Hum: <b id="humedadM">--%</b></span>
+                            <span>💧 Humedad: <b id="humedadM">--%</b></span>
                             <span>💨 Viento: <b id="vientoM">-- km/h</b></span>
+                            <span>🧭 Dirección: <b id="direccionVientoM">--</b></span>
                         </div>
                     </div>
                 </div>
@@ -223,12 +279,12 @@
             <div class="card-meteo-m">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                     <h3 style="font-size:1.15rem; margin:0;">📅 Próximos 5 Días</h3>
-                    <small style="color:#718096; font-weight:600;">Toca para ver horas</small>
+                    <small style="color:var(--text-muted); font-weight:600;">Toca para ver horas</small>
                 </div>
                 <div class="carrusel-pronostico-m" id="carruselPronosticoM"></div>
             </div>
 
-            <div class="card-meteo-m" style="border-left: 5px solid #27ae60;">
+            <div class="card-meteo-m" style="border-left: 5px solid #38a169;">
                 <h3 id="tituloModuloM" style="font-size:1.15rem; margin-bottom:6px;">🌱 Recomendación Operativa</h3>
                 <div id="contenidoModuloM" style="font-size:1rem; line-height:1.45;">Calculando...</div>
             </div>
@@ -241,9 +297,9 @@
             <div class="sheet-handle"></div>
             <span style="font-size:3rem;">🛡️</span>
             <h3 style="margin:8px 0; font-size:1.4rem;">Doble Factor (2FA)</h3>
-            <p style="font-size:1rem; color:#718096;">Ingresá el código numérico para acceder:</p>
+            <p style="font-size:1rem; color:var(--text-muted);">Ingresá el código numérico para acceder:</p>
             <div id="otpMuestraM" style="background:#ebf8ff; color:#2b6cb0; font-size:1.4rem; font-weight:800; padding:10px; border-radius:10px; margin:12px 0;">Código: ------</div>
-            <input type="text" inputmode="numeric" id="inputOtpM" maxlength="6" placeholder="000000" style="font-size:2.2rem; letter-spacing:8px; text-align:center; height:60px; width:100%; border:2px solid #3182ce; border-radius:12px; margin-bottom:12px;">
+            <input type="text" inputmode="numeric" id="inputOtpM" maxlength="6" placeholder="000000" style="font-size:2.2rem; letter-spacing:8px; text-align:center; height:60px; width:100%; border:2px solid #3182ce; border-radius:12px; margin-bottom:12px; background:var(--input-bg); color:var(--text-main);">
             <div id="errorOtpM" style="display:none; color:#e53e3e; font-weight:700; margin-bottom:10px;"></div>
             <button class="btn-primario-m" onclick="verificarOtpMobile()">Verificar y Acceder</button>
         </div>
@@ -254,11 +310,11 @@
         <div class="modal-sheet-content">
             <div class="sheet-handle"></div>
             <h2 style="color:#2b6cb0; margin-bottom:10px;">AuraTerra</h2>
-            <div class="pilar-card-m" style="background:#f7fafc; border-left:4px solid #3182ce; margin-bottom:10px;">
+            <div class="pilar-card-m" style="background:var(--bg-card-alt); border-left:4px solid #3182ce; margin-bottom:10px;">
                 <h4>👥 Quiénes Somos</h4>
                 <p>Plataforma agroclimatológica desarrollada en Entre Ríos por <b>Javier Folmer, Soledad Gareis y Tamara Godoy</b>.</p>
             </div>
-            <div class="pilar-card-m" style="background:#f7fafc; border-left:4px solid #38a169; margin-bottom:10px;">
+            <div class="pilar-card-m" style="background:var(--bg-card-alt); border-left:4px solid #38a169; margin-bottom:10px;">
                 <h4>⚙️ Cómo Funciona</h4>
                 <p>Consenso en vivo de 3 APIs (OpenWeatherMap + WeatherAPI + Tomorrow.io) cruzado con la <b>Ley Provincial Nº 6.599</b> y estándar <b>INTA</b>.</p>
             </div>
@@ -270,41 +326,28 @@
     <div class="modal-mobile-sheet" id="modalHorasMobile">
         <div class="modal-sheet-content">
             <div class="sheet-handle"></div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #edf2f7; padding-bottom:8px; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--border-card); padding-bottom:8px; margin-bottom:12px;">
                 <h3 id="tituloModalHorasM" style="margin:0; font-size:1.15rem;">🕒 Detalle por Horas</h3>
-                <button onclick="cerrarModalHorasMobile()" style="background:none; border:none; font-size:1.3rem; cursor:pointer;">❌</button>
+                <button onclick="cerrarModalHorasMobile()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--text-main);">❌</button>
             </div>
             <div id="listaHorariosDiaContenedor"></div>
         </div>
     </div>
 
-    <!-- MODAL ADMIN -->
-    <!-- MODAL ADMIN MOBILE CON GESTIÓN DE ESTADOS Y 50 ÚLTIMOS EVENTOS -->
+    <!-- MODAL ADMIN MOBILE -->
     <div class="modal-mobile-sheet" id="modalAdminMobile">
         <div class="modal-sheet-content" style="max-height: 90vh;">
             <div class="sheet-handle"></div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #edf2f7; padding-bottom:8px; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--border-card); padding-bottom:8px; margin-bottom:12px;">
                 <h3 style="margin:0; color:#2b6cb0; font-size:1.2rem;">⚙️ Consola Admin & Auditoría</h3>
-                <button onclick="cerrarModalAdminMobile()" style="background:none; border:none; font-size:1.4rem; cursor:pointer;">❌</button>
+                <button onclick="cerrarModalAdminMobile()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-main);">❌</button>
             </div>
-            
-            <!-- 1. Gestión de Estados de Usuarios -->
-            <h4 style="margin:10px 0 6px 0; color:#1a202c; font-size:1.05rem;">👥 Usuarios y Estado de Licencia</h4>
-            <div id="listaUsuariosAdminM" style="max-height:250px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px; padding:8px; margin-bottom:16px; font-size:0.95rem; background:#fff;">
-                Cargando usuarios...
-            </div>
-
-            <!-- 2. Ranking de Consultas -->
-            <h4 style="margin:12px 0 6px 0; color:#1a202c; font-size:1.05rem;">📊 Ranking Más Consultadas</h4>
-            <div id="rankingConsultasBoxM" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; font-size:0.95rem; margin-bottom:16px;">
-                Cargando ranking...
-            </div>
-
-            <!-- 3. Historial de los Últimos 50 Movimientos -->
-            <h4 style="margin:12px 0 6px 0; color:#1a202c; font-size:1.05rem;">🕒 Últimos 50 Movimientos (Telemetría)</h4>
-            <div id="ultimosEventosBoxM" style="max-height:220px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px; padding:10px; font-size:0.88rem; background:#fff;">
-                Cargando eventos...
-            </div>
+            <h4 style="margin:10px 0 6px 0; font-size:1.05rem;">👥 Usuarios y Estado</h4>
+            <div id="listaUsuariosAdminM" style="max-height:240px; overflow-y:auto; border:1px solid var(--border-card); border-radius:10px; padding:8px; margin-bottom:14px; background:var(--bg-card-alt);">Cargando...</div>
+            <h4 style="margin:12px 0 6px 0; font-size:1.05rem;">📊 Ranking Más Consultadas</h4>
+            <div id="rankingConsultasBoxM" style="background:var(--bg-card-alt); border:1px solid var(--border-card); border-radius:10px; padding:10px; font-size:0.95rem; margin-bottom:14px;">Cargando...</div>
+            <h4 style="margin:12px 0 6px 0; font-size:1.05rem;">🕒 Últimos 50 Movimientos</h4>
+            <div id="ultimosEventosBoxM" style="max-height:220px; overflow-y:auto; border:1px solid var(--border-card); border-radius:10px; padding:10px; font-size:0.88rem; background:var(--bg-card-alt);">Cargando...</div>
         </div>
     </div>
 

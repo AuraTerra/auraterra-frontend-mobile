@@ -1,4 +1,4 @@
-// Detección automática del host real (funciona en localhost y en la IP 192.168.x.x desde el celular)
+// Detección automática del host real
 const hostActual = window.location.hostname;
 const API_URL = (hostActual === 'localhost' || hostActual === '127.0.0.1' || hostActual.startsWith('192.168.'))
     ? `http://${hostActual}/auraterra-backend-api/index.php`
@@ -10,9 +10,220 @@ let codigoOtpM = null;
 let intentosOtpM = 0;
 let recordarSesionM = true;
 let pronosticoCompletoMemoria = [];
+let ultimaAlertaEnviada = null;
 
-// 1. GESTIÓN DE SESIÓN
+// ⏱️ GESTIÓN DE TIMEOUT POR INACTIVIDAD (30 MINUTOS)
+const TIEMPO_LIMITE_INACTIVIDAD = 30 * 60 * 1000;
+let timerInactividad = null;
+
+function reiniciarTemporizadorInactividad() {
+    if (timerInactividad) clearTimeout(timerInactividad);
+    timerInactividad = setTimeout(() => {
+        if (datosUsuarioM) {
+            alert("🔒 Sesión finalizada automáticamente por 30 minutos de inactividad.");
+            cerrarSesionMobile();
+        }
+    }, TIEMPO_LIMITE_INACTIVIDAD);
+}
+
+['click', 'touchstart', 'mousemove', 'keydown', 'scroll'].forEach(evt => {
+    window.addEventListener(evt, reiniciarTemporizadorInactividad, { passive: true });
+});
+
+// 🌓 MODO DÍA / NOCHE AUTOMÁTICO
+function aplicarTemaSegunHora() {
+    const hora = new Date().getHours();
+    const body = document.body;
+    const indicador = document.getElementById('indicadorModoDiaNoche');
+    const esDeNoche = (hora >= 20 || hora < 6.5);
+
+    if (esDeNoche) {
+        body.classList.add('modo-noche');
+        if (indicador) indicador.textContent = '🌙';
+    } else {
+        body.classList.remove('modo-noche');
+        if (indicador) indicador.textContent = '☀️';
+    }
+}
+
+// 🧭 CÁLCULO DE DIRECCIÓN DE VIENTO CARDINAL Y PREDOMINANTE
+function convertirGradosACardinal(grados) {
+    if (grados === undefined || grados === null || grados === "" || isNaN(Number(grados))) return null;
+    const g = Number(grados);
+    const sectores = [
+        "N ⬆️", "NNE ↗️", "NE ↗️", "ENE ↗️",
+        "E ➡️", "ESE ↘️", "SE ↘️", "SSE ↘️",
+        "S ⬇️", "SSO ↙️", "SO ↙️", "OSO ↙️",
+        "O ⬅️", "ONO ↖️", "NO ↖️", "NNO ↖️"
+    ];
+    const val = Math.round((((g % 360) + 360) % 360) / 22.5) % 16;
+    return sectores[val];
+}
+
+// Extracción unificada y tolerante de grados
+function extraerGradosDeObjeto(obj) {
+    if (!obj) return null;
+    if (obj.viento_grados !== undefined && obj.viento_grados !== null) return obj.viento_grados;
+    if (obj.viento_deg !== undefined && obj.viento_deg !== null) return obj.viento_deg;
+    if (obj.viento_direccion !== undefined && !isNaN(Number(obj.viento_direccion))) return obj.viento_direccion;
+    if (obj.wind && obj.wind.deg !== undefined && obj.wind.deg !== null) return obj.wind.deg;
+    if (obj.consenso?.detalles_api?.openweathermap?.viento_grados !== undefined) return obj.consenso.detalles_api.openweathermap.viento_grados;
+    if (obj.consenso?.detalles_api?.tomorrow?.wind_direction !== undefined) return obj.consenso.detalles_api.tomorrow.wind_direction;
+    return null;
+}
+
+// Determina la dirección predominante evaluando las próximas 24 horas
+function calcularDireccionPredominante(listaPronostico) {
+    if (!listaPronostico || !Array.isArray(listaPronostico) || listaPronostico.length === 0) {
+        return "SSE ↘️";
+    }
+
+    const muestras24h = listaPronostico.slice(0, 8);
+    let conteo = {};
+
+    muestras24h.forEach(m => {
+        const deg = extraerGradosDeObjeto(m);
+        const card = convertirGradosACardinal(deg);
+        if (card) {
+            conteo[card] = (conteo[card] || 0) + 1;
+        }
+    });
+
+    let predominante = null;
+    let maxOcurrencias = 0;
+    for (const [dir, cant] of Object.entries(conteo)) {
+        if (cant > maxOcurrencias) {
+            maxOcurrencias = cant;
+            predominante = dir;
+        }
+    }
+
+    return predominante ? predominante : "SSE ↘️";
+}
+
+// 🔔 SERVICE WORKER Y NOTIFICACIONES NATIVAS
+async function registrarServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        try {
+            await navigator.serviceWorker.register('./sw.js');
+        } catch (e) {
+            console.log("Service worker en modo local:", e);
+        }
+    }
+}
+
+function verificarPermisoNotificaciones() {
+    const banner = document.getElementById('bannerHabilitarNotificaciones');
+    if (!banner) return;
+
+    if (!('Notification' in window)) {
+        banner.style.display = 'none';
+        return;
+    }
+
+    if (Notification.permission === 'granted') {
+        banner.style.display = 'none';
+    } else {
+        banner.style.display = 'flex';
+    }
+}
+
+async function solicitarPermisoNotificaciones() {
+    if (!('Notification' in window)) {
+        lanzarToastMobile("⚠️ Tu navegador no soporta notificaciones de sistema.");
+        return;
+    }
+
+    try {
+        const permiso = await Notification.requestPermission();
+        if (permiso === 'granted') {
+            document.getElementById('bannerHabilitarNotificaciones').style.display = 'none';
+            lanzarToastMobile("🔔 Alertas activadas con éxito");
+            dispararAlertaAlCelular("AuraTerra Conectado 🛰️", "Notificaciones de tormenta y viento de 12 a 24hs activas.");
+            if (pronosticoCompletoMemoria.length > 0) {
+                evaluarYDispararAlertas12a24hs(pronosticoCompletoMemoria);
+            }
+        } else {
+            alert("Permiso denegado. Podés habilitarlo desde los ajustes de sitio del navegador.");
+        }
+    } catch(err) {
+        lanzarToastMobile("🔔 Alertas locales activadas");
+    }
+}
+
+function dispararAlertaAlCelular(titulo, mensaje) {
+    if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200, 100, 300]);
+    }
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(reg => {
+                reg.showNotification(titulo, {
+                    body: mensaje,
+                    icon: '../auraterra-frontend-web/public/img/logoAuraTerra.jpeg',
+                    badge: '../auraterra-frontend-web/public/img/logoAuraTerra.jpeg',
+                    vibrate: [200, 100, 200],
+                    tag: 'alerta-meteo-auraterra'
+                });
+            }).catch(() => {
+                try { new Notification(titulo, { body: mensaje }); } catch(e){}
+            });
+        } else {
+            try { new Notification(titulo, { body: mensaje }); } catch(e){}
+        }
+    }
+
+    lanzarToastMobile(`🚨 ${titulo}: ${mensaje}`);
+}
+
+// ⚠️ ESCANEO DE PRONÓSTICO (12 A 24 HORAS DE ANTICIPACIÓN)
+function evaluarYDispararAlertas12a24hs(lista) {
+    if (!lista || lista.length === 0) return;
+
+    const ahoraSeg = Math.floor(Date.now() / 1000);
+    const ini12h = ahoraSeg + (12 * 3600);
+    const fin24h = ahoraSeg + (26 * 3600);
+
+    const ventana = lista.filter(item => item.dt >= ini12h && item.dt <= fin24h);
+    if (ventana.length === 0) return;
+
+    let alertas = [];
+
+    ventana.forEach(m => {
+        const velKmh = Math.round(m.wind.speed * 3.6);
+        const desc = m.weather[0].main.toLowerCase();
+        const dObj = new Date(m.dt * 1000);
+        const hora = dObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+        const dia = dObj.toLocaleDateString('es-AR', { weekday: 'short' });
+        const dir = convertirGradosACardinal(extraerGradosDeObjeto(m)) || "predominante";
+
+        if (velKmh >= 24) {
+            alertas.push(`Vientos fuertes (${velKmh} km/h ${dir}) previstos para ${dia} a las ${hora} hs.`);
+        }
+        if (desc.includes('rain') || desc.includes('thunderstorm') || desc.includes('lluvia') || desc.includes('tormenta')) {
+            alertas.push(`Tormenta o lluvia prevista para ${dia} a las ${hora} hs.`);
+        }
+        if (m.main.temp <= 3) {
+            alertas.push(`Riesgo de helada (${Math.round(m.main.temp)}°C) previsto para ${dia} a las ${hora} hs.`);
+        }
+    });
+
+    if (alertas.length > 0) {
+        const textoAlerta = alertas[0];
+        if (ultimaAlertaEnviada !== textoAlerta) {
+            ultimaAlertaEnviada = textoAlerta;
+            dispararAlertaAlCelular("Alerta Temprana AuraTerra", textoAlerta);
+        }
+    }
+}
+
+// 1. INICIALIZACIÓN
 window.addEventListener('DOMContentLoaded', () => {
+    aplicarTemaSegunHora();
+    reiniciarTemporizadorInactividad();
+    registrarServiceWorker();
+
     const sesion = localStorage.getItem('usuario_mobile') || sessionStorage.getItem('usuario_mobile');
     if (sesion) {
         try {
@@ -50,7 +261,7 @@ function toggleOjoPass(idInput, btn) {
     }
 }
 
-// 2. LOGIN Y 2FA MOBILE
+// 2. LOGIN Y 2FA
 async function iniciarLoginMobile(e) {
     e.preventDefault();
     const email = document.getElementById('emailLoginM').value.trim();
@@ -70,7 +281,7 @@ async function iniciarLoginMobile(e) {
 
         if (res.status === 403 || data.status === 'suspended') {
             msg.style.color = '#e53e3e';
-            msg.textContent = '🚫 Cuenta suspendida: El período de prueba de 7 días ha finalizado. Por favor escribe a soporte@auraterra.com';
+            msg.textContent = '🚫 Cuenta suspendida: Período de prueba finalizado. Escribe a soporte@auraterra.com';
             return;
         }
 
@@ -115,6 +326,7 @@ function verificarOtpMobile() {
             sessionStorage.setItem('usuario_mobile', str);
             localStorage.removeItem('usuario_mobile');
         }
+        reiniciarTemporizadorInactividad();
         mostrarDashboardMobile();
     } else {
         intentosOtpM++;
@@ -148,6 +360,7 @@ async function iniciarRegistroMobile(e) {
         if (data.status === 'success') {
             datosUsuarioM = { nombre, email, rol, estado: 'prueba' };
             localStorage.setItem('usuario_mobile', JSON.stringify(datosUsuarioM));
+            reiniciarTemporizadorInactividad();
             mostrarDashboardMobile();
         } else {
             msg.style.color = '#e53e3e';
@@ -187,6 +400,7 @@ function mostrarDashboardMobile() {
     const linkAdmin = document.getElementById('linkAdminConsoleM');
     if (linkAdmin) linkAdmin.style.display = (rol === 'admin') ? 'block' : 'none';
 
+    verificarPermisoNotificaciones();
     iniciarUbicacionAutomaticaMobile();
 }
 
@@ -195,7 +409,7 @@ function toggleMenuUsuarioMobile() {
     if (dm) dm.style.display = (dm.style.display === 'block') ? 'none' : 'block';
 }
 
-// 3. CONSULTA CLIMÁTICA Y GEOLOCALIZACIÓN
+// 3. CONSULTAS CLIMÁTICAS
 function iniciarUbicacionAutomaticaMobile() {
     if (navigator.geolocation) {
         lanzarToastMobile("🛰️ Obteniendo ubicación GPS...");
@@ -232,6 +446,13 @@ async function consultarClimaPorCoordenadasMobile(lat, lon) {
         if (dataPron.ok !== false && Array.isArray(dataPron.data)) {
             pronosticoCompletoMemoria = dataPron.data;
             renderizarPronosticoMobile(dataPron.data);
+            evaluarYDispararAlertas12a24hs(dataPron.data);
+            
+            // Actualización de dirección cardinal
+            const elemDir = document.getElementById('direccionVientoM');
+            if (elemDir && (elemDir.textContent.includes('--') || elemDir.textContent.includes('Calma'))) {
+                elemDir.textContent = calcularDireccionPredominante(dataPron.data);
+            }
         }
     } catch(e) {
         consultarClimaCompletoMobile(ciudadActualM);
@@ -255,6 +476,12 @@ async function consultarClimaCompletoMobile(ciudad) {
         if (dataPron.ok !== false && Array.isArray(dataPron.data)) {
             pronosticoCompletoMemoria = dataPron.data;
             renderizarPronosticoMobile(dataPron.data);
+            evaluarYDispararAlertas12a24hs(dataPron.data);
+
+            const elemDir = document.getElementById('direccionVientoM');
+            if (elemDir && (elemDir.textContent.includes('--') || elemDir.textContent.includes('Calma'))) {
+                elemDir.textContent = calcularDireccionPredominante(dataPron.data);
+            }
         }
     } catch(err) {
         lanzarToastMobile("⚠️ Conexión en espera...");
@@ -270,6 +497,19 @@ function aplicarDatosClimaActualMobile(clima) {
     const vKmh = clima.viento_kmh || Math.round(clima.viento * 3.6);
     document.getElementById('vientoM').textContent = `${vKmh} km/h`;
     
+    // Extracción tolerante y cálculo directo sin bloqueos
+    const degDirecto = extraerGradosDeObjeto(clima);
+    const cardDirecto = convertirGradosACardinal(degDirecto);
+    
+    const elemDir = document.getElementById('direccionVientoM');
+    if (cardDirecto) {
+        elemDir.textContent = cardDirecto;
+    } else if (pronosticoCompletoMemoria.length > 0) {
+        elemDir.textContent = calcularDireccionPredominante(pronosticoCompletoMemoria);
+    } else {
+        elemDir.textContent = (vKmh <= 3) ? "Calma / Leve" : "SSE ↘️";
+    }
+
     const fuentes = clima.consenso ? clima.consenso.fuentes_consultadas : 3;
     document.getElementById('consensoPillM').textContent = `⚡ Consenso: ${fuentes} APIs`;
 
@@ -329,7 +569,7 @@ function evaluarMarcoLegalMobile(vKmh, ciudad) {
     }
 }
 
-// 4. PRONÓSTICO CON MÁXIMA/MÍNIMA Y DESGLOSE HORARIO
+// 4. PRONÓSTICO 5 DÍAS CON HORARIOS
 function renderizarPronosticoMobile(lista) {
     const contenedor = document.getElementById('carruselPronosticoM');
     contenedor.innerHTML = '';
@@ -363,7 +603,7 @@ function renderizarPronosticoMobile(lista) {
                     <span class="max">↑ ${Math.round(max)}°</span> / <span class="min">↓ ${Math.round(min)}°</span>
                 </div>
                 <div style="font-size:0.9rem; text-transform:capitalize; margin:4px 0;">${rep.weather[0].description}</div>
-                <small style="color:#718096;">💨 ${Math.round(rep.wind.speed * 3.6)} km/h</small>
+                <small style="color:var(--text-muted);">💨 ${Math.round(rep.wind.speed * 3.6)} km/h</small>
                 <div style="font-size:0.8rem; color:#3182ce; font-weight:bold; margin-top:6px;">Ver horas ➔</div>
             </div>
         `;
@@ -385,17 +625,19 @@ function abrirDetalleHorasMobile(fechaClave, diaNom) {
     });
 
     if (itemsDelDia.length === 0) {
-        contenedor.innerHTML = '<p style="color:#718096; text-align:center;">Sin datos detallados.</p>';
+        contenedor.innerHTML = '<p style="color:var(--text-muted); text-align:center;">Sin datos detallados.</p>';
     } else {
         itemsDelDia.forEach(h => {
             const dateObj = new Date(h.dt * 1000);
             const hora = dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+            const dir = convertirGradosACardinal(extraerGradosDeObjeto(h)) || "Predominante";
+
             contenedor.innerHTML += `
                 <div class="item-horario-row">
-                    <span style="font-weight:bold; color:#2b6cb0;">${hora} hs</span>
+                    <span style="font-weight:bold; color:#3182ce;">${hora} hs</span>
                     <span style="font-weight:700;">${Math.round(h.main.temp)}°C</span>
-                    <span style="text-transform:capitalize;">${h.weather[0].description}</span>
-                    <span style="color:#718096; font-size:0.9rem;">💨 ${Math.round(h.wind.speed * 3.6)} km/h</span>
+                    <span style="text-transform:capitalize; font-size:0.9rem;">${h.weather[0].description}</span>
+                    <span style="font-size:0.85rem; color:var(--text-muted);">💨 ${Math.round(h.wind.speed * 3.6)} km/h (${dir})</span>
                 </div>
             `;
         });
@@ -408,7 +650,7 @@ function cerrarModalHorasMobile() {
     document.getElementById('modalHorasMobile').classList.remove('activa');
 }
 
-// 5. MODAL CORPORATIVO / QUIÉNES SOMOS
+// 5. MODALES INSTITUCIONALES Y ADMIN
 function abrirModalInfoCorporativoMobile() {
     document.getElementById('modalInfoCorporativoM').classList.add('activa');
 }
@@ -417,7 +659,6 @@ function cerrarModalInfoCorporativoMobile() {
     document.getElementById('modalInfoCorporativoM').classList.remove('activa');
 }
 
-// 6. CONSOLA DE ADMINISTRADOR MOBILE (Auditoría, Cambio de Estado y Últimos 50 Eventos)
 async function abrirModalAdminMobile(e) {
     if (e) e.preventDefault();
     const dm = document.getElementById('dropdownMenuMobile');
@@ -439,7 +680,6 @@ async function abrirModalAdminMobile(e) {
         const data = await res.json();
 
         if (data.status === 'ok') {
-            // Renderizar Usuarios con selector de cambio de estado
             if (data.usuarios && data.usuarios.length > 0) {
                 listaUsr.innerHTML = '';
                 data.usuarios.forEach(u => {
@@ -447,19 +687,19 @@ async function abrirModalAdminMobile(e) {
                     let diasInfo = (u.estado === 'prueba') ? `(⏳ ${u.dias_restantes}d restantes)` : '';
 
                     listaUsr.innerHTML += `
-                        <div style="padding:10px 6px; border-bottom:1px solid #edf2f7; display:flex; flex-direction:column; gap:6px;">
+                        <div style="padding:10px 6px; border-bottom:1px solid var(--border-card); display:flex; flex-direction:column; gap:6px;">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                                 <div>
-                                    <b style="font-size:1rem; color:#2d3748;">${u.nombre}</b><br>
-                                    <small style="color:#718096;">${u.email} | Rol: <b>${u.rol}</b></small>
+                                    <b style="font-size:1rem; color:var(--text-main);">${u.nombre}</b><br>
+                                    <small style="color:var(--text-muted);">${u.email} | Rol: <b>${u.rol}</b></small>
                                 </div>
                                 <span style="background:${color}20; color:${color}; border:1px solid ${color}; padding:2px 8px; border-radius:10px; font-weight:800; font-size:0.8rem;">
                                     ${u.estado.toUpperCase()}
                                 </span>
                             </div>
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
-                                <small style="color:#718096;">${diasInfo}</small>
-                                <select onchange="cambiarEstadoUsuarioDesdeMobile(${u.id}, this.value)" style="padding:6px 10px; border-radius:8px; border:1.5px solid #cbd5e0; font-weight:700; font-size:0.9rem; background:#f8fafc; color:#2d3748;">
+                                <small style="color:var(--text-muted);">${diasInfo}</small>
+                                <select onchange="cambiarEstadoUsuarioDesdeMobile(${u.id}, this.value)" style="padding:6px 10px; border-radius:8px; border:1.5px solid var(--border-card); font-weight:700; font-size:0.9rem; background:var(--input-bg); color:var(--text-main);">
                                     <option value="" disabled selected>Cambiar estado...</option>
                                     <option value="activo" ${u.estado === 'activo' ? 'disabled' : ''}>🟢 Activar (Pagado)</option>
                                     <option value="prueba" ${u.estado === 'prueba' ? 'disabled' : ''}>🟠 Modo Prueba</option>
@@ -470,10 +710,9 @@ async function abrirModalAdminMobile(e) {
                     `;
                 });
             } else {
-                listaUsr.innerHTML = '<p style="color:#718096; margin:0;">Sin usuarios registrados.</p>';
+                listaUsr.innerHTML = '<p style="color:var(--text-muted); margin:0;">Sin usuarios registrados.</p>';
             }
 
-            // Renderizar Ranking
             if (data.ranking && data.ranking.length > 0) {
                 let html = '<ol style="margin:0; padding-left:20px; line-height:1.6;">';
                 data.ranking.forEach(r => {
@@ -482,24 +721,23 @@ async function abrirModalAdminMobile(e) {
                 html += '</ol>';
                 boxRank.innerHTML = html;
             } else {
-                boxRank.innerHTML = '<p style="color:#718096; margin:0;">Sin consultas registradas.</p>';
+                boxRank.innerHTML = '<p style="color:var(--text-muted); margin:0;">Sin consultas registradas.</p>';
             }
 
-            // Renderizar Últimos 50 Movimientos
             if (boxEventos) {
                 if (data.ultimos && data.ultimos.length > 0) {
                     let htmlEventos = '<ul style="margin:0; padding-left:16px; line-height:1.6;">';
                     data.ultimos.forEach(e => {
                         let fechaTxt = e.fecha_hora ? e.fecha_hora.split(' ')[1] || e.fecha_hora : '';
                         htmlEventos += `<li style="margin-bottom:4px;">
-                            <span style="color:#718096; font-size:0.8rem;">[${fechaTxt}]</span> 
+                            <span style="color:var(--text-muted); font-size:0.8rem;">[${fechaTxt}]</span> 
                             <b>${e.usuario}</b>: ${e.componente_clickeado}
                         </li>`;
                     });
                     htmlEventos += '</ul>';
                     boxEventos.innerHTML = htmlEventos;
                 } else {
-                    boxEventos.innerHTML = '<p style="color:#718096; margin:0;">Sin actividad registrada.</p>';
+                    boxEventos.innerHTML = '<p style="color:var(--text-muted); margin:0;">Sin actividad registrada.</p>';
                 }
             }
 
@@ -541,7 +779,7 @@ function cerrarModalAdminMobile() {
     document.getElementById('modalAdminMobile').classList.remove('activa');
 }
 
-// 7. BÚSQUEDA Y FAVORITOS
+// 6. BÚSQUEDA Y FAVORITOS
 function buscarClimaMobile() {
     const txt = document.getElementById('inputCiudadM').value.trim();
     if (txt) consultarClimaCompletoMobile(txt);
@@ -573,7 +811,7 @@ function renderizarPillsFavoritos() {
     cont.innerHTML = '';
     favs.forEach(c => {
         const nombreCorto = c.split(',')[0];
-        cont.innerHTML += `<button style="background:#fff; border:1px solid #cbd5e0; padding:6px 12px; border-radius:14px; font-weight:700; white-space:nowrap;" onclick="consultarClimaCompletoMobile('${c}')">📍 ${nombreCorto}</button>`;
+        cont.innerHTML += `<button style="background:var(--bg-card); color:var(--text-main); border:1px solid var(--border-card); padding:6px 12px; border-radius:14px; font-weight:700; white-space:nowrap;" onclick="consultarClimaCompletoMobile('${c}')">📍 ${nombreCorto}</button>`;
     });
 }
 
@@ -582,5 +820,5 @@ function lanzarToastMobile(msg) {
     if (!t) return;
     t.innerText = msg;
     t.style.display = 'block';
-    setTimeout(() => { t.style.display = 'none'; }, 3000);
+    setTimeout(() => { t.style.display = 'none'; }, 3500);
 }
