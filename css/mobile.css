@@ -475,3 +475,18 @@ body {
     margin-top: 10px;
     font-size: 0.95rem;
 }
+
+/* Agrandar el buscador y su texto en la versión mobile */
+#inputCiudad {
+    font-size: 1.25rem !important; /* Letra más grande y nítida */
+    font-weight: 600 !important;
+    height: 58px !important;       /* Más altura para tocarlo fácil */
+    padding: 0 16px !important;
+    color: #1a202c !important;
+}
+
+/* Agrandar el texto de ejemplo (placeholder) */
+#inputCiudad::placeholder {
+    font-size: 1.15rem !important;
+    color: #718096 !important;
+}
