@@ -4,166 +4,307 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AuraTerra Mobile</title>
-    <link rel="stylesheet" href="./css/mobile.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f0f4f8; color: #2d3748; -webkit-tap-highlight-color: transparent; }
+        
+        /* Contenedores de vista */
+        .vista-mobile { display: none; padding: 16px; min-height: 100vh; }
+        .vista-mobile.activa { display: block; }
+        
+        /* Encabezado */
+        .header-auth-m { text-align: center; padding: 20px 10px 15px 10px; }
+        .logo-m { max-width: 220px; width: 70%; height: auto; display: block; margin: 0 auto; }
+        .eslogan-auth-m { font-style: italic; color: #4a5568; font-size: 0.95rem; margin-top: 10px; line-height: 1.4; }
+
+        /* Pestañas */
+        .tabs-auth-m { display: flex; gap: 10px; margin: 15px 0 20px 0; }
+        .tab-m { flex: 1; height: 50px; border-radius: 12px; border: none; background: #e2e8f0; font-size: 1.1rem; font-weight: 700; color: #4a5568; cursor: pointer; }
+        .tab-m.activa { background: #3182ce; color: #ffffff; }
+
+        /* Tarjetas de los dos pilares */
+        .info-pilares-box { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; text-align: left; }
+        .pilar-card-m { padding: 14px 16px; border-radius: 14px; border-left: 6px solid; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .pilar-agro { background: #f0fff4; border-color: #38a169; }
+        .pilar-events { background: #ebf8ff; border-color: #3182ce; }
+        .pilar-card-m h4 { margin: 0 0 6px 0; font-size: 1.15rem; }
+        .pilar-agro h4 { color: #22543d; }
+        .pilar-events h4 { color: #2b6cb0; }
+        .pilar-card-m p { margin: 0; font-size: 0.95rem; color: #4a5568; line-height: 1.45; }
+
+        /* Campos de formulario */
+        .campo-m { margin-bottom: 16px; text-align: left; }
+        .campo-m label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 1.05rem; color: #2d3748; }
+        .campo-m input, .campo-m select { width: 100%; height: 54px; border-radius: 12px; border: 1.5px solid #cbd5e0; padding: 0 16px; font-size: 1.1rem; background: #ffffff; outline: none; }
+        .campo-m input:focus, .campo-m select:focus { border-color: #3182ce; box-shadow: 0 0 0 3px rgba(49,130,206,0.15); }
+        
+        .pass-wrapper-m { position: relative; display: flex; align-items: center; }
+        .pass-wrapper-m input { padding-right: 52px; }
+        .btn-eye-m { position: absolute; right: 6px; height: 100%; width: 44px; background: none; border: none; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        .check-recordar-m { display: flex; align-items: center; gap: 12px; margin: 18px 0; font-size: 1rem; font-weight: 600; color: #4a5568; }
+        .check-recordar-m input { width: 22px; height: 22px; accent-color: #3182ce; }
+
+        .btn-primario-m { width: 100%; height: 56px; border-radius: 12px; border: none; background: #3182ce; color: #ffffff; font-size: 1.15rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(49,130,206,0.3); }
+        .btn-primario-m:active { transform: scale(0.98); }
+
+        .msg-auth-m { text-align: center; margin-top: 14px; font-size: 1.05rem; font-weight: 700; line-height: 1.4; }
+
+        /* Dashboard UI */
+        .header-dashboard-m { background: #ffffff; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-radius: 14px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; }
+        .logo-pequeno-m { max-height: 40px; width: auto; }
+        .usuario-badge-m { background: #edf2f7; padding: 8px 14px; border-radius: 20px; font-weight: 700; font-size: 0.95rem; cursor: pointer; }
+        
+        .dropdown-usuario-m { position: absolute; top: 60px; right: 16px; background: #ffffff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.18); padding: 14px; z-index: 99999; border: 1px solid #e2e8f0; min-width: 220px; }
+
+        .buscador-card-m { background: #ffffff; padding: 16px; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 16px; }
+        #inputCiudadM { width: 100%; height: 56px; border-radius: 12px; border: 2px solid #cbd5e0; padding: 0 16px; font-size: 1.15rem; font-weight: 600; outline: none; margin-bottom: 10px; }
+        #inputCiudadM::placeholder { font-size: 1.05rem; color: #718096; font-weight: 500; }
+        
+        .acciones-buscador-m { display: flex; gap: 8px; }
+        .btn-accion-m { flex: 1; height: 50px; background: #3182ce; color: #fff; font-weight: 700; font-size: 1.05rem; border: none; border-radius: 10px; cursor: pointer; }
+        .btn-icono-m { width: 50px; height: 50px; background: #edf2f7; border: 1.5px solid #cbd5e0; border-radius: 10px; font-size: 1.3rem; cursor: pointer; }
+
+        .card-meteo-m { background: #ffffff; border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .cabecera-card-m { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .pill-consenso-m { background: #ebf8ff; color: #2b6cb0; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; }
+        .cuerpo-clima-m { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+        .temp-enorme-m { font-size: 3.6rem; font-weight: 800; color: #1a202c; line-height: 1; }
+        .detalles-actual-m { flex: 1; text-align: right; }
+        .desc-m { font-size: 1.25rem; font-weight: 700; text-transform: capitalize; color: #2d3748; margin-bottom: 6px; }
+        .metricas-sub-m { font-size: 0.95rem; color: #4a5568; display: flex; flex-direction: column; gap: 4px; }
+
+        .carrusel-pronostico-m { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+        .dia-chip-m { min-width: 140px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 12px; text-align: center; flex-shrink: 0; cursor: pointer; }
+        .dia-chip-m:active { transform: scale(0.96); }
+        .temp-extremos { font-size: 0.9rem; font-weight: 700; margin: 4px 0; }
+        .temp-extremos .max { color: #e53e3e; }
+        .temp-extremos .min { color: #3182ce; }
+
+        /* Modales */
+        .modal-mobile-sheet { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 999999; align-items: flex-end; justify-content: center; }
+        .modal-mobile-sheet.activa { display: flex; }
+        .modal-sheet-content { background: #ffffff; width: 100%; max-height: 85vh; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 22px 18px 28px 18px; overflow-y: auto; box-shadow: 0 -10px 25px rgba(0,0,0,0.25); animation: slideUp 0.25s ease-out; text-align: left; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .sheet-handle { width: 44px; height: 5px; background: #cbd5e0; border-radius: 10px; margin: 0 auto 16px auto; }
+        
+        .item-horario-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 6px; border-bottom: 1px solid #edf2f7; font-size: 1rem; }
+        .toast-app { display: none; position: fixed; bottom: 20px; left: 16px; right: 16px; background: #2d3748; color: #fff; padding: 14px 18px; border-radius: 12px; text-align: center; font-weight: 700; z-index: 9999999; }
+    </style>
 </head>
 <body>
-    <div id="toastApp" class="toast-mobile"></div>
+    <div id="toastApp" class="toast-app"></div>
 
-    <!-- VISTA 1: ACCESO / LOGIN MOBILE -->
-    <section id="vistaAuthMobile" class="vista-mobile activa">
-        <header class="header-auth-mobile">
-            <h1 class="logo-titulo">AuraTerra</h1>
-            <p class="eslogan-sub">"Los 21gr del timo que acompañan el éxito de la organización de tu actividad al aire libre"</p>
+    <!-- 1. VISTA DE AUTENTICACIÓN -->
+    <div id="vistaAuthMobile" class="vista-mobile activa">
+        <header class="header-auth-m">
+            <button type="button" onclick="abrirModalInfoCorporativoMobile()" style="background:none; border:none; cursor:pointer;">
+                <img src="../auraterra-frontend-web/public/img/logoAuraTerra.jpeg" onerror="this.src='./img/logoAuraTerra.jpeg'" alt="AuraTerra" class="logo-m">
+            </button>
+            <p class="eslogan-auth-m">"Los 21gr del timo que acompañan el éxito de la organización de tu actividad al aire libre"</p>
         </header>
 
-        <main class="contenedor-auth-card">
-            <div class="tabs-mobile">
-                <button class="tab-btn-m activa" id="tabLoginM" onclick="cambiarTabMobile('login')">Ingresar</button>
-                <button class="tab-btn-m" id="tabRegisterM" onclick="cambiarTabMobile('registro')">Registrarse</button>
+        <div class="tabs-auth-m">
+            <button class="tab-m activa" id="tabLoginM" onclick="cambiarTabMobile('login')">Ingresar</button>
+            <button class="tab-m" id="tabRegisterM" onclick="cambiarTabMobile('registro')">Registrarse</button>
+        </div>
+
+        <div class="info-pilares-box">
+            <div class="pilar-card-m pilar-agro">
+                <h4>🌾 AuraTerra Agro</h4>
+                <p>Monitoreo fitosanitario bajo la <b>Ley Provincial Nº 6.599</b> de Entre Ríos (7 a 15 km/h) y estándar <b>INTA/BPA</b>.</p>
             </div>
-
-            <!-- Form Login -->
-            <form id="formLoginMobile" onsubmit="iniciarLoginMobile(event)">
-                <div class="campo-mobile">
-                    <label>Correo Electrónico</label>
-                    <input type="email" id="emailLoginM" required placeholder="ejemplo@correo.com" autocomplete="email">
-                </div>
-                <div class="campo-mobile">
-                    <label>Contraseña</label>
-                    <div class="input-con-ojo">
-                        <input type="password" id="passLoginM" required placeholder="••••••••" autocomplete="current-password">
-                        <button type="button" class="btn-ojo" onclick="toggleOjoPass('passLoginM', this)">🙈</button>
-                    </div>
-                </div>
-
-                <div class="checkbox-recordar-m">
-                    <input type="checkbox" id="checkRecordarM" checked>
-                    <label for="checkRecordarM">Mantener sesión iniciada</label>
-                </div>
-
-                <button type="submit" class="btn-primario-m">Entrar al Clima ➔</button>
-            </form>
-
-            <!-- Form Registro -->
-            <form id="formRegMobile" style="display:none;" onsubmit="iniciarRegistroMobile(event)">
-                <div class="campo-mobile">
-                    <label>Nombre y Apellido</label>
-                    <input type="text" id="nombreRegM" required placeholder="AuraTerra Clima">
-                </div>
-                <div class="campo-mobile">
-                    <label>Correo Electrónico</label>
-                    <input type="email" id="emailRegM" required placeholder="ejemplo@correo.com" autocomplete="email">
-                </div>
-                <div class="campo-mobile">
-                    <label>Contraseña</label>
-                    <div class="input-con-ojo">
-                        <input type="password" id="passRegM" required placeholder="Mínimo 8 car., 1 mayús., 1 núm., 1 símb." autocomplete="new-password">
-                        <button type="button" class="btn-ojo" onclick="toggleOjoPass('passRegM', this)">🙈</button>
-                    </div>
-                </div>
-                <div class="campo-mobile">
-                    <label>Perfil de Uso</label>
-                    <select id="rolRegM" class="select-mobile">
-                        <option value="agricultor">🌾 Agro (Ley de Pulverización)</option>
-                        <option value="planificador">🎪 Eventos (Seguridad Carpas)</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-primario-m" style="background:#27ae60;">Crear Cuenta ➔</button>
-            </form>
-
-            <div id="msgAuthMobile" class="msg-auth-error"></div>
-        </main>
-    </section>
-
-    <!-- VISTA 2: DASHBOARD / CLIMA MOBILE -->
-    <section id="vistaDashboardMobile" class="vista-mobile">
-        <header class="topbar-app-mobile">
-            <div class="marca-app">
-                <span class="punto-online"></span>
-                <strong>AuraTerra</strong>
+            <div class="pilar-card-m pilar-events">
+                <h4>🎪 AuraEvents Logística</h4>
+                <p>Seguridad de montajes temporales, <b>carpas y gazebos</b> (alerta a >18 km/h) y prevención por condensación.</p>
             </div>
-            <div class="acciones-usuario-m">
-                <span id="badgeRolUsuarioM" class="badge-rol-m">Agro</span>
-                <button id="btnCerrarSesionM" class="btn-icono-m" title="Cerrar sesión" onclick="cerrarSesionMobile()">🚪</button>
+        </div>
+
+        <!-- Login -->
+        <form id="formLoginMobile" onsubmit="iniciarLoginMobile(event)">
+            <div class="campo-m">
+                <label>Correo Electrónico:</label>
+                <input type="email" id="emailLoginM" required placeholder="tu-correo@ejemplo.com" autocomplete="email">
+            </div>
+            <div class="campo-m">
+                <label>Contraseña:</label>
+                <div class="pass-wrapper-m">
+                    <input type="password" id="passLoginM" required placeholder="••••••••" autocomplete="current-password">
+                    <button type="button" class="btn-eye-m" onclick="toggleOjoPass('passLoginM', this)">🙈</button>
+                </div>
+            </div>
+            <div class="check-recordar-m">
+                <input type="checkbox" id="checkRecordarM" checked>
+                <label for="checkRecordarM">Mantener sesión iniciada en este móvil</label>
+            </div>
+            <button type="submit" class="btn-primario-m">Ingresar al Dashboard ➔</button>
+        </form>
+
+        <!-- Registro -->
+        <form id="formRegMobile" style="display: none;" onsubmit="iniciarRegistroMobile(event)">
+            <div class="campo-m">
+                <label>Nombre y Apellido:</label>
+                <input type="text" id="nombreRegM" required placeholder="Ej: Soledad Gareis">
+            </div>
+            <div class="campo-m">
+                <label>Correo Electrónico:</label>
+                <input type="email" id="emailRegM" required placeholder="tu-correo@ejemplo.com" autocomplete="email">
+            </div>
+            <div class="campo-m">
+                <label>Contraseña:</label>
+                <div class="pass-wrapper-m">
+                    <input type="password" id="passRegM" required placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+                    <button type="button" class="btn-eye-m" onclick="toggleOjoPass('passRegM', this)">🙈</button>
+                </div>
+            </div>
+            <div class="campo-m">
+                <label>Elegí tu Perfil Operativo:</label>
+                <select id="rolRegM">
+                    <option value="agricultor">🌾 AuraTerra Agro (Pulverización / Siembra)</option>
+                    <option value="planificador">🎪 AuraEvents (Carpas / Eventos al Aire Libre)</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-primario-m" style="background:#27ae60;">Completar Registro ➔</button>
+        </form>
+
+        <div id="msgAuthMobile" class="msg-auth-m"></div>
+    </div>
+
+    <!-- 2. VISTA DASHBOARD -->
+    <div id="vistaDashboardMobile" class="vista-mobile">
+        <header class="header-dashboard-m">
+            <button type="button" onclick="abrirModalInfoCorporativoMobile()" style="background:none; border:none; cursor:pointer;">
+                <img src="../auraterra-frontend-web/public/img/logoAuraTerra.jpeg" onerror="this.src='./img/logoAuraTerra.jpeg'" alt="Logo" class="logo-pequeno-m">
+            </button>
+            <div class="usuario-badge-m" onclick="toggleMenuUsuarioMobile()">
+                <span id="badgeRolUsuarioM">Agro</span> ▾
+            </div>
+            <div id="dropdownMenuMobile" class="dropdown-usuario-m" style="display:none;">
+                <div style="font-weight:bold; font-size:1rem; margin-bottom:8px; color:#2d3748;">👤 <span id="lblNombreUsuarioMenuM">Usuario</span></div>
+                <a href="#" id="linkAdminConsoleM" style="display:none; color:#3182ce; font-weight:bold; padding:8px 0; text-decoration:none; border-top:1px solid #edf2f7;" onclick="abrirModalAdminMobile(event)">⚙️ Consola Admin</a>
+                <a href="#" style="color:#e53e3e; font-weight:bold; padding:8px 0; text-decoration:none; display:block; border-top:1px solid #edf2f7; margin-top:6px;" onclick="cerrarSesionMobile(event)">Cerrar Sesión</a>
             </div>
         </header>
 
-        <main class="contenedor-app-mobile">
-            <!-- Barra de Búsqueda Táctil -->
-            <div class="barra-busqueda-m">
-                <input type="text" id="inputCiudadM" placeholder="Ej: Crespo, Entre Ríos, AR">
-                <div class="fila-botones-busq-m">
-                    <button id="btnBuscarM" class="btn-busq-grande" onclick="buscarClimaMobile()">🔍 Buscar Clima</button>
-                    <button class="btn-icono-accion-m" onclick="activarGpsMobile()" title="Mi Ubicación">📍</button>
-                    <button id="btnFavM" class="btn-icono-accion-m" onclick="guardarFavoritoMobile()" title="Guardar Favorito">★</button>
+        <main>
+            <div class="buscador-card-m">
+                <input type="text" id="inputCiudadM" placeholder="AuraTerra Clima — Ej: Crespo, Entre Ríos, AR">
+                <div class="acciones-buscador-m">
+                    <button class="btn-accion-m" onclick="buscarClimaMobile()">🔍 Consultar</button>
+                    <button class="btn-icono-m" onclick="activarGpsMobile()" title="Mi ubicación">📍</button>
+                    <button class="btn-icono-m" onclick="guardarFavoritoMobile()" title="Favoritos">⭐</button>
                 </div>
             </div>
 
-            <!-- Menú Rápido de Favoritos en Pills Deslizables -->
-            <div id="contenedorPillsFavsM" class="carrusel-favs-m"></div>
+            <div id="contenedorPillsFavsM" style="display:flex; gap:8px; overflow-x:auto; margin-bottom:14px;"></div>
 
-            <!-- Tarjeta Clima Actual -->
-            <div class="card-m" id="cardClimaActualM">
-                <div class="encabezado-card-m">
-                    <span id="ciudadLabelM" class="localidad-m">📍 Cargando...</span>
+            <div class="card-meteo-m">
+                <div class="cabecera-card-m">
+                    <span id="ciudadLabelM" style="font-weight:700; font-size:1.1rem;">📍 Cargando...</span>
+                    <span id="consensoPillM" class="pill-consenso-m">⚡ Consenso</span>
                 </div>
-                <div class="temperatura-gigante-m" id="tempPrincipalM">--°</div>
-                <div class="estado-cielo-m" id="descClimaM">Sincronizando...</div>
-                
-                <div class="grilla-detalles-m">
-                    <div class="item-detalle-m">
-                        <span class="icono-det">💧</span>
-                        <div>
-                            <small>Humedad</small>
-                            <strong id="humedadM">--%</strong>
-                        </div>
-                    </div>
-                    <div class="item-detalle-m">
-                        <span class="icono-det">💨</span>
-                        <div>
-                            <small>Viento</small>
-                            <strong id="vientoM">-- km/h</strong>
+                <div class="cuerpo-clima-m">
+                    <div class="temp-enorme-m" id="tempPrincipalM">--°</div>
+                    <div class="detalles-actual-m">
+                        <div id="descClimaM" class="desc-m">Sincronizando...</div>
+                        <div class="metricas-sub-m">
+                            <span>💧 Hum: <b id="humedadM">--%</b></span>
+                            <span>💨 Viento: <b id="vientoM">-- km/h</b></span>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="pastilla-consenso-m" id="consensoPillM">
-                    ⚡ Consenso: 3 APIs Activas
+            <div class="card-meteo-m" style="border-left: 5px solid #3182ce;">
+                <h3 id="tituloLegalM" style="font-size:1.15rem; margin-bottom:6px;">⚖️ Evaluación Normativa</h3>
+                <div id="contenidoLegalM" style="font-size:1rem; line-height:1.45;">Evaluando...</div>
+            </div>
+
+            <div class="card-meteo-m">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h3 style="font-size:1.15rem; margin:0;">📅 Próximos 5 Días</h3>
+                    <small style="color:#718096; font-weight:600;">Toca para ver horas</small>
                 </div>
+                <div class="carrusel-pronostico-m" id="carruselPronosticoM"></div>
             </div>
 
-            <!-- Tarjeta Control Operativo / Legal -->
-            <div class="card-m card-alerta-m" id="cardLegalM">
-                <h3 id="tituloLegalM">⚖️ Operación</h3>
-                <div id="contenidoLegalM" class="texto-legal-m">Evaluando vientos y normativa...</div>
-            </div>
-
-            <!-- Pronóstico Horario Deslizable -->
-            <div class="card-m">
-                <h3>📅 Próximos Días</h3>
-                <div class="carrusel-dias-m" id="carruselPronosticoM">
-                    <p style="color:#718096; padding:10px;">Cargando tendencias...</p>
-                </div>
-            </div>
-
-            <!-- Recomendación Agronómica / Logística -->
-            <div class="card-m card-info-m">
-                <h3 id="tituloModuloM">🌱 Recomendación de Labor</h3>
-                <div id="contenidoModuloM" class="cuerpo-info-m">Cargando análisis regional...</div>
+            <div class="card-meteo-m" style="border-left: 5px solid #27ae60;">
+                <h3 id="tituloModuloM" style="font-size:1.15rem; margin-bottom:6px;">🌱 Recomendación Operativa</h3>
+                <div id="contenidoModuloM" style="font-size:1rem; line-height:1.45;">Calculando...</div>
             </div>
         </main>
-    </section>
+    </div>
 
-    <!-- MODAL 2FA MOBILE -->
-    <div class="modal-2fa-overlay-m" id="modal2FAMobile">
-        <div class="modal-2fa-card-m">
-            <span style="font-size:2.8rem;">🔐</span>
-            <h3>Doble Factor (2FA)</h3>
-            <p>Ingresá el código de verificación de 6 dígitos:</p>
-            <div class="caja-otp-muestra" id="otpMuestraM">Código: ------</div>
-            <input type="text" inputmode="numeric" class="input-otp-m" id="inputOtpM" maxlength="6" placeholder="000000">
-            <button class="btn-primario-m" onclick="verificarOtpMobile()">Confirmar y Entrar ➔</button>
-            <p id="errorOtpM" class="error-otp-m" style="display:none;">Código incorrecto. Reintentá.</p>
+    <!-- MODAL 2FA -->
+    <div class="modal-mobile-sheet" id="modal2FAMobile">
+        <div class="modal-sheet-content" style="text-align:center;">
+            <div class="sheet-handle"></div>
+            <span style="font-size:3rem;">🛡️</span>
+            <h3 style="margin:8px 0; font-size:1.4rem;">Doble Factor (2FA)</h3>
+            <p style="font-size:1rem; color:#718096;">Ingresá el código numérico para acceder:</p>
+            <div id="otpMuestraM" style="background:#ebf8ff; color:#2b6cb0; font-size:1.4rem; font-weight:800; padding:10px; border-radius:10px; margin:12px 0;">Código: ------</div>
+            <input type="text" inputmode="numeric" id="inputOtpM" maxlength="6" placeholder="000000" style="font-size:2.2rem; letter-spacing:8px; text-align:center; height:60px; width:100%; border:2px solid #3182ce; border-radius:12px; margin-bottom:12px;">
+            <div id="errorOtpM" style="display:none; color:#e53e3e; font-weight:700; margin-bottom:10px;"></div>
+            <button class="btn-primario-m" onclick="verificarOtpMobile()">Verificar y Acceder</button>
+        </div>
+    </div>
+
+    <!-- MODAL QUIÉNES SOMOS -->
+    <div class="modal-mobile-sheet" id="modalInfoCorporativoM">
+        <div class="modal-sheet-content">
+            <div class="sheet-handle"></div>
+            <h2 style="color:#2b6cb0; margin-bottom:10px;">AuraTerra</h2>
+            <div class="pilar-card-m" style="background:#f7fafc; border-left:4px solid #3182ce; margin-bottom:10px;">
+                <h4>👥 Quiénes Somos</h4>
+                <p>Plataforma agroclimatológica desarrollada en Entre Ríos por <b>Javier Folmer, Soledad Gareis y Tamara Godoy</b>.</p>
+            </div>
+            <div class="pilar-card-m" style="background:#f7fafc; border-left:4px solid #38a169; margin-bottom:10px;">
+                <h4>⚙️ Cómo Funciona</h4>
+                <p>Consenso en vivo de 3 APIs (OpenWeatherMap + WeatherAPI + Tomorrow.io) cruzado con la <b>Ley Provincial Nº 6.599</b> y estándar <b>INTA</b>.</p>
+            </div>
+            <button class="btn-primario-m" onclick="cerrarModalInfoCorporativoMobile()" style="margin-top:10px;">Cerrar ⬅</button>
+        </div>
+    </div>
+
+    <!-- MODAL CLIMA POR HORAS -->
+    <div class="modal-mobile-sheet" id="modalHorasMobile">
+        <div class="modal-sheet-content">
+            <div class="sheet-handle"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #edf2f7; padding-bottom:8px; margin-bottom:12px;">
+                <h3 id="tituloModalHorasM" style="margin:0; font-size:1.15rem;">🕒 Detalle por Horas</h3>
+                <button onclick="cerrarModalHorasMobile()" style="background:none; border:none; font-size:1.3rem; cursor:pointer;">❌</button>
+            </div>
+            <div id="listaHorariosDiaContenedor"></div>
+        </div>
+    </div>
+
+    <!-- MODAL ADMIN -->
+    <!-- MODAL ADMIN MOBILE CON GESTIÓN DE ESTADOS Y 50 ÚLTIMOS EVENTOS -->
+    <div class="modal-mobile-sheet" id="modalAdminMobile">
+        <div class="modal-sheet-content" style="max-height: 90vh;">
+            <div class="sheet-handle"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #edf2f7; padding-bottom:8px; margin-bottom:12px;">
+                <h3 style="margin:0; color:#2b6cb0; font-size:1.2rem;">⚙️ Consola Admin & Auditoría</h3>
+                <button onclick="cerrarModalAdminMobile()" style="background:none; border:none; font-size:1.4rem; cursor:pointer;">❌</button>
+            </div>
+            
+            <!-- 1. Gestión de Estados de Usuarios -->
+            <h4 style="margin:10px 0 6px 0; color:#1a202c; font-size:1.05rem;">👥 Usuarios y Estado de Licencia</h4>
+            <div id="listaUsuariosAdminM" style="max-height:250px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px; padding:8px; margin-bottom:16px; font-size:0.95rem; background:#fff;">
+                Cargando usuarios...
+            </div>
+
+            <!-- 2. Ranking de Consultas -->
+            <h4 style="margin:12px 0 6px 0; color:#1a202c; font-size:1.05rem;">📊 Ranking Más Consultadas</h4>
+            <div id="rankingConsultasBoxM" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; font-size:0.95rem; margin-bottom:16px;">
+                Cargando ranking...
+            </div>
+
+            <!-- 3. Historial de los Últimos 50 Movimientos -->
+            <h4 style="margin:12px 0 6px 0; color:#1a202c; font-size:1.05rem;">🕒 Últimos 50 Movimientos (Telemetría)</h4>
+            <div id="ultimosEventosBoxM" style="max-height:220px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px; padding:10px; font-size:0.88rem; background:#fff;">
+                Cargando eventos...
+            </div>
         </div>
     </div>
 
