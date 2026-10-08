@@ -144,9 +144,8 @@
     <div id="vistaAuthMobile" class="vista-mobile activa">
         <header class="header-auth-m">
             <button type="button" onclick="abrirModalInfoCorporativoMobile()" style="background:none; border:none; cursor:pointer;">
-                <img src="../auraterra-frontend-web/public/img/logoAuraTerra.jpeg" onerror="this.src='./img/logoAuraTerra.jpeg'" alt="AuraTerra" class="logo-m">
+                <img src="./img/logoAuraTerra.jpeg?v=3" alt="AuraTerra" class="logo-m">
             </button>
-            <p class="eslogan-auth-m">"Los 21gr del timo que acompañan el éxito de la organización de tu actividad al aire libre"</p>
         </header>
 
         <div class="tabs-auth-m">
@@ -217,7 +216,7 @@
     <div id="vistaDashboardMobile" class="vista-mobile">
         <header class="header-dashboard-m">
             <button type="button" onclick="abrirModalInfoCorporativoMobile()" style="background:none; border:none; cursor:pointer;">
-                <img src="../auraterra-frontend-web/public/img/logoAuraTerra.jpeg" onerror="this.src='./img/logoAuraTerra.jpeg'" alt="Logo" class="logo-pequeno-m">
+                <img src="./img/logoAuraTerra.jpeg?v=3" alt="Logo" class="logo-pequeno-m">
             </button>
             <div style="display:flex; align-items:center; gap:8px;">
                 <span id="indicadorModoDiaNoche" style="font-size:1.2rem;">☀️</span>
@@ -309,7 +308,13 @@
     <div class="modal-mobile-sheet" id="modalInfoCorporativoM">
         <div class="modal-sheet-content">
             <div class="sheet-handle"></div>
-            <h2 style="color:#2b6cb0; margin-bottom:10px;">AuraTerra</h2>
+            
+            <!-- LOGO Y TÍTULO CENTRADOS -->
+            <div style="text-align: center; margin-bottom: 14px;">
+                <img src="./img/logoAuraTerra.jpeg?v=3" alt="Logo AuraTerra" style="width: 130px; height: auto; display: block; margin: 0 auto 8px auto; border-radius: 8px;">
+                <h2 style="color:#2b6cb0; margin: 0;">AuraTerra</h2>
+            </div>
+
             <div class="pilar-card-m" style="background:var(--bg-card-alt); border-left:4px solid #3182ce; margin-bottom:10px;">
                 <h4>👥 Quiénes Somos</h4>
                 <p>Plataforma agroclimatológica desarrollada en Entre Ríos por <b>Javier Folmer, Soledad Gareis y Tamara Godoy</b>.</p>
