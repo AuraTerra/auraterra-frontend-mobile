@@ -46,6 +46,55 @@ function aplicarTemaSegunHora() {
     }
 }
 
+// NORMALIZADOR DE GEOLOCALIZACIÓN
+function normalizarUbicacionArgentinaMobile(rawUbicacion, lat, lon) {
+    if (!rawUbicacion) return "Crespo, Entre Ríos, AR";
+    const loc = rawUbicacion.toLowerCase().trim();
+
+    if (loc.includes("crespo") || (lat && lat <= -32.0 && lat >= -32.1 && lon >= -60.4 && lon <= -60.2)) return "Crespo, Entre Ríos, AR";
+    if (loc.includes("paraná") || loc.includes("parana")) return "Paraná, Entre Ríos, AR";
+    if (loc.includes("concordia")) return "Concordia, Entre Ríos, AR";
+    if (loc.includes("gualeguaychú") || loc.includes("gualeguaychu")) return "Gualeguaychú, Entre Ríos, AR";
+    if (loc.includes("diamante")) return "Diamante, Entre Ríos, AR";
+    if (loc.includes("victoria")) return "Victoria, Entre Ríos, AR";
+    if (loc.includes("villaguay")) return "Villaguay, Entre Ríos, AR";
+    if (loc.includes("chajarí") || loc.includes("chajari")) return "Chajarí, Entre Ríos, AR";
+    if (loc.includes("nogoyá") || loc.includes("nogoya")) return "Nogoyá, Entre Ríos, AR";
+    if (loc.includes("la paz")) return "La Paz, Entre Ríos, AR";
+    if (loc.includes("colón") || loc.includes("colon")) return "Colón, Entre Ríos, AR";
+    if (loc.includes("federal")) return "Federal, Entre Ríos, AR";
+    if (loc.includes("viale")) return "Viale, Entre Ríos, AR";
+    if (loc.includes("seguí") || loc.includes("segui")) return "Seguí, Entre Ríos, AR";
+
+    const partes = rawUbicacion.split(',').map(p => p.trim());
+    if (partes.length === 3) return rawUbicacion;
+
+    if (loc.includes("rosario")) return "Rosario, Santa Fe, AR";
+    if (loc.includes("santa fe")) return "Santa Fe, Santa Fe, AR";
+    if (loc.includes("córdoba") || loc.includes("cordoba")) return "Córdoba, Córdoba, AR";
+    if (loc.includes("buenos aires")) return "Buenos Aires, CABA, AR";
+    if (loc.includes("mendoza")) return "Mendoza, Mendoza, AR";
+
+    return `${rawUbicacion}, Argentina, AR`;
+}
+
+// VALIDACIÓN DE FORMATO ESTRICTO (Ciudad, Provincia, País)
+function validarFormatoUbicacionMobile(texto) {
+    if (!texto) return false;
+    const partes = texto.split(',').map(p => p.trim()).filter(p => p.length > 0);
+    return partes.length === 3;
+}
+
+function abrirModalFormatoInvalidoM() {
+    const m = document.getElementById('modalFormatoInvalidoM');
+    if (m) m.classList.add('activa');
+}
+
+function cerrarModalFormatoInvalidoM() {
+    const m = document.getElementById('modalFormatoInvalidoM');
+    if (m) m.classList.remove('activa');
+}
+
 // 🧭 CÁLCULO DE DIRECCIÓN DE VIENTO CARDINAL Y PREDOMINANTE
 function convertirGradosACardinal(grados) {
     if (grados === undefined || grados === null || grados === "" || isNaN(Number(grados))) return null;
@@ -60,7 +109,6 @@ function convertirGradosACardinal(grados) {
     return sectores[val];
 }
 
-// Extracción unificada y tolerante de grados
 function extraerGradosDeObjeto(obj) {
     if (!obj) return null;
     if (obj.viento_grados !== undefined && obj.viento_grados !== null) return obj.viento_grados;
@@ -72,7 +120,6 @@ function extraerGradosDeObjeto(obj) {
     return null;
 }
 
-// Determina la dirección predominante evaluando las próximas 24 horas
 function calcularDireccionPredominante(listaPronostico) {
     if (!listaPronostico || !Array.isArray(listaPronostico) || listaPronostico.length === 0) {
         return "SSE ↘️";
@@ -84,9 +131,7 @@ function calcularDireccionPredominante(listaPronostico) {
     muestras24h.forEach(m => {
         const deg = extraerGradosDeObjeto(m);
         const card = convertirGradosACardinal(deg);
-        if (card) {
-            conteo[card] = (conteo[card] || 0) + 1;
-        }
+        if (card) conteo[card] = (conteo[card] || 0) + 1;
     });
 
     let predominante = null;
@@ -101,124 +146,16 @@ function calcularDireccionPredominante(listaPronostico) {
     return predominante ? predominante : "SSE ↘️";
 }
 
-// 🔔 SERVICE WORKER Y NOTIFICACIONES NATIVAS
+// 🔔 SERVICE WORKER
 async function registrarServiceWorker() {
     if ('serviceWorker' in navigator) {
         try {
             await navigator.serviceWorker.register('./sw.js');
-        } catch (e) {
-            console.log("Service worker en modo local:", e);
-        }
+        } catch (e) {}
     }
 }
 
-function verificarPermisoNotificaciones() {
-    const banner = document.getElementById('bannerHabilitarNotificaciones');
-    if (!banner) return;
-
-    if (!('Notification' in window)) {
-        banner.style.display = 'none';
-        return;
-    }
-
-    if (Notification.permission === 'granted') {
-        banner.style.display = 'none';
-    } else {
-        banner.style.display = 'flex';
-    }
-}
-
-async function solicitarPermisoNotificaciones() {
-    if (!('Notification' in window)) {
-        lanzarToastMobile("⚠️ Tu navegador no soporta notificaciones de sistema.");
-        return;
-    }
-
-    try {
-        const permiso = await Notification.requestPermission();
-        if (permiso === 'granted') {
-            document.getElementById('bannerHabilitarNotificaciones').style.display = 'none';
-            lanzarToastMobile("🔔 Alertas activadas con éxito");
-            dispararAlertaAlCelular("AuraTerra Conectado 🛰️", "Notificaciones de tormenta y viento de 12 a 24hs activas.");
-            if (pronosticoCompletoMemoria.length > 0) {
-                evaluarYDispararAlertas12a24hs(pronosticoCompletoMemoria);
-            }
-        } else {
-            alert("Permiso denegado. Podés habilitarlo desde los ajustes de sitio del navegador.");
-        }
-    } catch(err) {
-        lanzarToastMobile("🔔 Alertas locales activadas");
-    }
-}
-
-function dispararAlertaAlCelular(titulo, mensaje) {
-    if ('vibrate' in navigator) {
-        navigator.vibrate([200, 100, 200, 100, 300]);
-    }
-
-    if ('Notification' in window && Notification.permission === 'granted') {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.ready.then(reg => {
-                reg.showNotification(titulo, {
-                    body: mensaje,
-                    icon: '../auraterra-frontend-web/public/img/logoAuraTerra.jpeg',
-                    badge: '../auraterra-frontend-web/public/img/logoAuraTerra.jpeg',
-                    vibrate: [200, 100, 200],
-                    tag: 'alerta-meteo-auraterra'
-                });
-            }).catch(() => {
-                try { new Notification(titulo, { body: mensaje }); } catch(e){}
-            });
-        } else {
-            try { new Notification(titulo, { body: mensaje }); } catch(e){}
-        }
-    }
-
-    lanzarToastMobile(`🚨 ${titulo}: ${mensaje}`);
-}
-
-// ⚠️ ESCANEO DE PRONÓSTICO (12 A 24 HORAS DE ANTICIPACIÓN)
-function evaluarYDispararAlertas12a24hs(lista) {
-    if (!lista || lista.length === 0) return;
-
-    const ahoraSeg = Math.floor(Date.now() / 1000);
-    const ini12h = ahoraSeg + (12 * 3600);
-    const fin24h = ahoraSeg + (26 * 3600);
-
-    const ventana = lista.filter(item => item.dt >= ini12h && item.dt <= fin24h);
-    if (ventana.length === 0) return;
-
-    let alertas = [];
-
-    ventana.forEach(m => {
-        const velKmh = Math.round(m.wind.speed * 3.6);
-        const desc = m.weather[0].main.toLowerCase();
-        const dObj = new Date(m.dt * 1000);
-        const hora = dObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-        const dia = dObj.toLocaleDateString('es-AR', { weekday: 'short' });
-        const dir = convertirGradosACardinal(extraerGradosDeObjeto(m)) || "predominante";
-
-        if (velKmh >= 24) {
-            alertas.push(`Vientos fuertes (${velKmh} km/h ${dir}) previstos para ${dia} a las ${hora} hs.`);
-        }
-        if (desc.includes('rain') || desc.includes('thunderstorm') || desc.includes('lluvia') || desc.includes('tormenta')) {
-            alertas.push(`Tormenta o lluvia prevista para ${dia} a las ${hora} hs.`);
-        }
-        if (m.main.temp <= 3) {
-            alertas.push(`Riesgo de helada (${Math.round(m.main.temp)}°C) previsto para ${dia} a las ${hora} hs.`);
-        }
-    });
-
-    if (alertas.length > 0) {
-        const textoAlerta = alertas[0];
-        if (ultimaAlertaEnviada !== textoAlerta) {
-            ultimaAlertaEnviada = textoAlerta;
-            dispararAlertaAlCelular("Alerta Temprana AuraTerra", textoAlerta);
-        }
-    }
-}
-
-// 1. INICIALIZACIÓN
+// 1. INICIALIZACIÓN Y CONTROL ESTRICTO DE ACCESO
 window.addEventListener('DOMContentLoaded', () => {
     aplicarTemaSegunHora();
     reiniciarTemporizadorInactividad();
@@ -237,6 +174,7 @@ window.addEventListener('DOMContentLoaded', () => {
             mostrarAuthMobile();
         }
     } else {
+        // Bloqueo estricto: sin sesión va directo al Login
         mostrarAuthMobile();
     }
     renderizarPillsFavoritos();
@@ -281,7 +219,7 @@ async function iniciarLoginMobile(e) {
 
         if (res.status === 403 || data.status === 'suspended') {
             msg.style.color = '#e53e3e';
-            msg.textContent = '🚫 Cuenta suspendida: Período de prueba finalizado. Escribe a soporte@auraterra.com';
+            msg.innerHTML = '🚫 Cuenta suspendida: Período de prueba finalizado.<br><a href="mailto:auraterraclima@hotmail.com?subject=Reactivacion%20AuraTerra" style="color:#c53030; font-weight:bold;">Contactar auraterraclima@hotmail.com</a>';
             return;
         }
 
@@ -388,6 +326,12 @@ function mostrarAuthMobile() {
 }
 
 function mostrarDashboardMobile() {
+    // Si no hay datos de usuario, rebota a Auth inmediatamente
+    if (!datosUsuarioM) {
+        mostrarAuthMobile();
+        return;
+    }
+
     document.getElementById('vistaAuthMobile').classList.remove('activa');
     document.getElementById('vistaDashboardMobile').classList.add('activa');
     
@@ -400,7 +344,6 @@ function mostrarDashboardMobile() {
     const linkAdmin = document.getElementById('linkAdminConsoleM');
     if (linkAdmin) linkAdmin.style.display = (rol === 'admin') ? 'block' : 'none';
 
-    verificarPermisoNotificaciones();
     iniciarUbicacionAutomaticaMobile();
 }
 
@@ -436,7 +379,8 @@ async function consultarClimaPorCoordenadasMobile(lat, lon) {
         const dataAct = await resAct.json();
         if (dataAct.status === 'success' || dataAct.data) {
             const clima = dataAct.data;
-            ciudadActualM = clima.ubicacion || `${lat}, ${lon}`;
+            ciudadActualM = normalizarUbicacionArgentinaMobile(clima.ubicacion, Number(lat), Number(lon));
+            clima.ubicacion = ciudadActualM;
             document.getElementById('inputCiudadM').value = ciudadActualM;
             aplicarDatosClimaActualMobile(clima);
         }
@@ -446,9 +390,7 @@ async function consultarClimaPorCoordenadasMobile(lat, lon) {
         if (dataPron.ok !== false && Array.isArray(dataPron.data)) {
             pronosticoCompletoMemoria = dataPron.data;
             renderizarPronosticoMobile(dataPron.data);
-            evaluarYDispararAlertas12a24hs(dataPron.data);
             
-            // Actualización de dirección cardinal
             const elemDir = document.getElementById('direccionVientoM');
             if (elemDir && (elemDir.textContent.includes('--') || elemDir.textContent.includes('Calma'))) {
                 elemDir.textContent = calcularDireccionPredominante(dataPron.data);
@@ -476,7 +418,6 @@ async function consultarClimaCompletoMobile(ciudad) {
         if (dataPron.ok !== false && Array.isArray(dataPron.data)) {
             pronosticoCompletoMemoria = dataPron.data;
             renderizarPronosticoMobile(dataPron.data);
-            evaluarYDispararAlertas12a24hs(dataPron.data);
 
             const elemDir = document.getElementById('direccionVientoM');
             if (elemDir && (elemDir.textContent.includes('--') || elemDir.textContent.includes('Calma'))) {
@@ -497,7 +438,6 @@ function aplicarDatosClimaActualMobile(clima) {
     const vKmh = clima.viento_kmh || Math.round(clima.viento * 3.6);
     document.getElementById('vientoM').textContent = `${vKmh} km/h`;
     
-    // Extracción tolerante y cálculo directo sin bloqueos
     const degDirecto = extraerGradosDeObjeto(clima);
     const cardDirecto = convertirGradosACardinal(degDirecto);
     
@@ -514,6 +454,7 @@ function aplicarDatosClimaActualMobile(clima) {
     document.getElementById('consensoPillM').textContent = `⚡ Consenso: ${fuentes} APIs`;
 
     evaluarMarcoLegalMobile(vKmh, clima.ubicacion || ciudadActualM);
+    actualizarModuloTecnicoMobile(vKmh, clima);
 }
 
 function evaluarMarcoLegalMobile(vKmh, ciudad) {
@@ -522,54 +463,120 @@ function evaluarMarcoLegalMobile(vKmh, ciudad) {
     const esArg = locMin.includes("ar") || locMin.includes("argentina");
     const rol = datosUsuarioM?.rol || 'agricultor';
 
+    const card = document.getElementById('cardLegalMobile');
     const tit = document.getElementById('tituloLegalM');
     const cont = document.getElementById('contenidoLegalM');
 
     if (rol === 'planificador') {
-        tit.innerText = "⛺ Seguridad de Montajes y Carpas";
-        cont.innerHTML = vKmh > 18 
-            ? "<b style='color:#e53e3e;'>🚫 RÁFAGAS ALARMANTES (>18 km/h).</b> Suspender montajes verticales y asegurar gazebos." 
-            : "<b style='color:#27ae60;'>✅ VIENTO CONTROLADO.</b> Estructuras y sonido al aire libre seguros.";
+        tit.innerText = "⛺ Seguridad de Montajes y Gazebos";
+        if (vKmh > 18) {
+            card.style.borderLeftColor = "#e53e3e";
+            cont.innerHTML = "<b style='color:#e53e3e;'>🚫 RÁFAGAS ALARMANTES (>18 km/h).</b> Suspender montajes verticales, añadir lastres en carpas y replegar gazebos livianos.";
+        } else {
+            card.style.borderLeftColor = "#38a169";
+            cont.innerHTML = "<b style='color:#27ae60;'>✅ VIENTO CONTROLADO.</b> Estructuras y sonido al aire libre seguros.";
+        }
     } else {
         if (esER) {
             tit.innerText = "⚖️ Ley Provincial Nº 6.599 (Entre Ríos)";
-            cont.innerHTML = (vKmh >= 7 && vKmh <= 15)
-                ? "<b style='color:#27ae60;'>✅ PULVERIZACIÓN HABILITADA.</b> Dentro del umbral provincial de 7 a 15 km/h."
-                : "<b style='color:#e53e3e;'>🚫 PULVERIZACIÓN SUSPENDIDA.</b> Fuera del rango seguro por deriva o inversión.";
-        } else if (esArg) {
-            tit.innerText = "🌾 Estándar Nacional INTA / Red BPA";
-            if (vKmh >= 5 && vKmh <= 12) {
-                cont.innerHTML = "<b style='color:#27ae60;'>✅ CONDICIONES ÓPTIMAS (5 a 12 km/h).</b> Aplicación recomendada.";
-            } else if (vKmh < 5) {
-                cont.innerHTML = "<b style='color:#dd6b20;'>⚠️ RIESGO DE INVERSIÓN TÉRMICA (<5 km/h).</b> Gotas en suspensión.";
+            if (vKmh >= 7 && vKmh <= 15) {
+                card.style.borderLeftColor = "#38a169";
+                cont.innerHTML = "<b style='color:#27ae60;'>✅ PULVERIZACIÓN HABILITADA.</b> Dentro del umbral provincial legal de 7 a 15 km/h.";
             } else {
-                cont.innerHTML = "<b style='color:#e53e3e;'>🚫 RIESGO DE DERIVA (>12 km/h).</b> Suspender labor fitosanitaria.";
+                card.style.borderLeftColor = "#e53e3e";
+                cont.innerHTML = `<b style='color:#e53e3e;'>🚫 PULVERIZACIÓN SUSPENDIDA.</b> Fuera del rango de 7 a 15 km/h por riesgo de ${vKmh < 7 ? "inversión térmica" : "deriva química"}.`;
+            }
+        } else if (esArg) {
+            tit.innerText = "🌾 Estándar Nacional INTA / BPA";
+            if (vKmh >= 5 && vKmh <= 12) {
+                card.style.borderLeftColor = "#38a169";
+                cont.innerHTML = "<b style='color:#27ae60;'>✅ CONDICIONES ÓPTIMAS (5 a 12 km/h).</b> Aplicación recomendada.";
+            } else {
+                card.style.borderLeftColor = "#dd6b20";
+                cont.innerHTML = "<b style='color:#dd6b20;'>⚠️ APLICACIÓN NO RECOMENDADA.</b> Fuera de la ventana óptima.";
             }
         } else {
             tit.innerText = "🌐 Lineamientos Internacionales FAO";
             cont.innerHTML = vKmh <= 15 ? "<b style='color:#27ae60;'>✅ CONDICIÓN FAVORABLE (<15 km/h).</b>" : "<b style='color:#e53e3e;'>🚫 VIENTO EXCESIVO.</b>";
         }
     }
+}
 
-    const titMod = document.getElementById('tituloModuloM');
-    const contMod = document.getElementById('contenidoModuloM');
+// 8. INFORMACIÓN TÉCNICA DETALLADA (AGRO Y EVENTOS)
+function actualizarModuloTecnicoMobile(vKmh, clima) {
+    const rol = datosUsuarioM?.rol || 'agricultor';
+    const tit = document.getElementById('tituloModuloM');
+    const cont = document.getElementById('contenidoModuloM');
+    const mes = new Date().getMonth();
+    const temp = Math.round(clima.temperatura);
+    const hum = clima.humedad;
+
     if (rol === 'planificador') {
-        titMod.innerText = "🎪 Logística AuraEvents";
-        contMod.innerHTML = "• Punto de Rocío: Proteger consolas y cableados por humedad.<br>• Hora Dorada: Ventana lumínica ideal a las 17:15 hs.";
+        tit.innerText = "🎪 Inteligencia Logística — AuraEvents";
+        
+        let alertaRocio = (hum >= 80)
+            ? `<div style="background:#fffaf0; border-left:3px solid #dd6b20; padding:10px; border-radius:8px; margin-bottom:8px;">
+                 <b style="color:#c05621;">💧 Alerta de Rocío y Condensación (${hum}% Humedad):</b><br>
+                 <span style="font-size:0.9rem;">Hacia la noche la temperatura caerá al punto de rocío. Cubrir consolas digitales de sonido con lonas térmicas y elevar cableados del césped para prevenir fugas de corriente.</span>
+               </div>`
+            : `<div style="background:#f7fafc; border-left:3px solid #3182ce; padding:10px; border-radius:8px; margin-bottom:8px;">
+                 <b style="color:#2b6cb0;">💧 Humedad Estable (${hum}%):</b> Bajo riesgo de condensación en equipos.
+               </div>`;
+
+        cont.innerHTML = `
+            ${alertaRocio}
+            <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:8px;">
+                <b>🌅 Ventanas de Luz Natural:</b><br>
+                • <b>Hora Dorada:</b> 17:40 a 18:25 hs (Luz suave para fotos principales).<br>
+                • <b>Hora Azul:</b> 18:25 a 18:45 hs (Encendido de luces perimetrales y velas).
+            </div>
+            <div style="background:#f8fafc; padding:10px; border-radius:8px;">
+                <b>🌡️ Confort del Invitado:</b> Actual de <b>${temp}°C</b>. Prever calefactores si desciende de 16°C o reforzar hidratación si supera los 28°C.
+            </div>
+        `;
     } else {
-        titMod.innerText = "🌱 Calendario de Siembra";
-        const mes = new Date().getMonth();
-        if (mes >= 8 && mes <= 11) {
-            contMod.innerHTML = "<b>Campaña Gruesa:</b> Óptimo para <b>Maíz Temprano</b> y preparación para <b>Soja de 1ª</b>.";
-        } else if (mes >= 4 && mes <= 7) {
-            contMod.innerHTML = "<b>Campaña Fina:</b> Ventana para <b>Trigo Pan</b> y legumbres de cobertura.";
-        } else {
-            contMod.innerHTML = "<b>Cierre Estival:</b> Monitoreo de llenado en sojas de segunda.";
+        tit.innerText = "🌱 Siembra y Decisiones Críticas — Agro";
+
+        let queSembrar = "";
+        let queNoSembrar = "";
+        let suelo = "";
+        let desvelo = "";
+
+        if (mes >= 8 && mes <= 11) { // Primavera
+            suelo = "14°C a 18°C a 5 cm de profundidad.";
+            queSembrar = "• <b>Maíz Temprano:</b> Ventana óptima (>12°C continuos en suelo).<br>• <b>Soja de 1ª:</b> Iniciar lotes al superar 15°C estables a las 8 AM.<br>• <b>Girasol:</b> Óptimo en lotes con buen drenaje.";
+            queNoSembrar = "• <b>TRIGO / CEBADA:</b> Prohibido sembrar. Fuera de época absoluta por golpe de calor en llenado.<br>• <b>Vicia / Arveja:</b> Ventana de implantación cerrada.";
+            desvelo = "<b>Riesgo de heladas tardías:</b> En bajos durante octubre. Si la mínima proyectada es <4°C en superficie, frenar tolvas de soja para evitar pérdida de cotiledones.";
+        } else if (mes >= 4 && mes <= 7) { // Otoño-Invierno
+            suelo = "8°C a 12°C a 5 cm de profundidad.";
+            queSembrar = "• <b>Trigo Pan (Ciclos Medios/Largos):</b> Época pico.<br>• <b>Cebada:</b> En lotes con buena fertilidad inicial de fósforo.<br>• <b>Cultivos de Servicio:</b> Vicia villosa, Centeno y Avena.";
+            queNoSembrar = "• <b>MAÍZ Y SOJA:</b> Prohibido sembrar. El suelo frío (<10°C) pudre la semilla sin germinar.";
+            desvelo = "<b>Enfermedades foliares:</b> Monitorear Mancha Amarilla y Roya en trigo si la humedad foliar supera 8 horas diarias.";
+        } else { // Verano
+            suelo = ">22°C (riesgo de desecación superficial).";
+            queSembrar = "• <b>Soja de 2ª:</b> Inmediatamente tras cosecha de trigo.<br>• <b>Maíz Tardío:</b> Ubicar floración fuera de la canícula de enero.";
+            queNoSembrar = "• <b>CEREALES DE INVIERNO:</b> Prohibido terminantemente.";
+            desvelo = "<b>Estrés hídrico:</b> Con >35°C y vientos del norte, el aborto floral es crítico. Monitorear Spodoptera y chinches.";
         }
+
+        cont.innerHTML = `
+            <div style="background:#f0fff4; border-left:3px solid #38a169; padding:10px; border-radius:8px; margin-bottom:8px;">
+                <b style="color:#22543d;">🌾 Qué sembrar hoy con éxito:</b><br>
+                <div style="margin-top:4px; font-size:0.92rem; color:#2d3748;">${queSembrar}</div>
+            </div>
+            <div style="background:#fff5f5; border-left:3px solid #e53e3e; padding:10px; border-radius:8px; margin-bottom:8px;">
+                <b style="color:#c53030;">🚫 Lo que NO sembrar ahora:</b><br>
+                <div style="margin-top:4px; font-size:0.92rem; color:#2d3748;">${queNoSembrar}</div>
+            </div>
+            <div style="background:#f8fafc; padding:10px; border-radius:8px; font-size:0.9rem; color:#4a5568;">
+                <b>🌡️ Suelo:</b> ${suelo}<br>
+                <b>🚜 El desvelo del productor:</b> ${desvelo}
+            </div>
+        `;
     }
 }
 
-// 4. PRONÓSTICO 5 DÍAS CON HORARIOS
+// 9. PRONÓSTICO 5 DÍAS CON HORARIOS
 function renderizarPronosticoMobile(lista) {
     const contenedor = document.getElementById('carruselPronosticoM');
     contenedor.innerHTML = '';
@@ -594,6 +601,7 @@ function renderizarPronosticoMobile(lista) {
         const rep = itemsDelDia.find(i => i.dt_txt && i.dt_txt.includes("12:00:00")) || itemsDelDia[0];
         const dateObj = new Date(rep.dt * 1000);
         const diaNom = dateObj.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric' });
+        const dir = convertirGradosACardinal(extraerGradosDeObjeto(rep)) || "SE ↘️";
 
         contenedor.innerHTML += `
             <div class="dia-chip-m" onclick="abrirDetalleHorasMobile('${fechaClave}', '${diaNom}')">
@@ -602,8 +610,8 @@ function renderizarPronosticoMobile(lista) {
                 <div class="temp-extremos">
                     <span class="max">↑ ${Math.round(max)}°</span> / <span class="min">↓ ${Math.round(min)}°</span>
                 </div>
-                <div style="font-size:0.9rem; text-transform:capitalize; margin:4px 0;">${rep.weather[0].description}</div>
-                <small style="color:var(--text-muted);">💨 ${Math.round(rep.wind.speed * 3.6)} km/h</small>
+                <div style="font-size:0.85rem; text-transform:capitalize; margin:4px 0;">${rep.weather[0].description}</div>
+                <small style="color:var(--text-muted);">💨 ${Math.round(rep.wind.speed * 3.6)} km/h (${dir})</small>
                 <div style="font-size:0.8rem; color:#3182ce; font-weight:bold; margin-top:6px;">Ver horas ➔</div>
             </div>
         `;
@@ -630,7 +638,7 @@ function abrirDetalleHorasMobile(fechaClave, diaNom) {
         itemsDelDia.forEach(h => {
             const dateObj = new Date(h.dt * 1000);
             const hora = dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-            const dir = convertirGradosACardinal(extraerGradosDeObjeto(h)) || "Predominante";
+            const dir = convertirGradosACardinal(extraerGradosDeObjeto(h)) || "SE ↘️";
 
             contenedor.innerHTML += `
                 <div class="item-horario-row">
@@ -650,7 +658,7 @@ function cerrarModalHorasMobile() {
     document.getElementById('modalHorasMobile').classList.remove('activa');
 }
 
-// 5. MODALES INSTITUCIONALES Y ADMIN
+// 10. MODALES INSTITUCIONALES Y ADMIN CON CAMBIO DE ESTADOS
 function abrirModalInfoCorporativoMobile() {
     document.getElementById('modalInfoCorporativoM').classList.add('activa');
 }
@@ -671,9 +679,9 @@ async function abrirModalAdminMobile(e) {
     const boxRank = document.getElementById('rankingConsultasBoxM');
     const boxEventos = document.getElementById('ultimosEventosBoxM');
 
-    listaUsr.innerHTML = 'Cargando usuarios y estados...';
-    boxRank.innerHTML = 'Cargando telemetría...';
-    if (boxEventos) boxEventos.innerHTML = 'Cargando últimos movimientos...';
+    listaUsr.innerHTML = 'Cargando usuarios...';
+    boxRank.innerHTML = 'Cargando ranking...';
+    if (boxEventos) boxEventos.innerHTML = 'Cargando últimos eventos...';
 
     try {
         const res = await fetch(`${API_URL}?ruta=/admin/telemetria`);
@@ -684,23 +692,17 @@ async function abrirModalAdminMobile(e) {
                 listaUsr.innerHTML = '';
                 data.usuarios.forEach(u => {
                     let color = u.estado === 'activo' ? '#27ae60' : (u.estado === 'prueba' ? '#dd6b20' : '#e53e3e');
-                    let diasInfo = (u.estado === 'prueba') ? `(⏳ ${u.dias_restantes}d restantes)` : '';
+                    let diasInfo = (u.estado === 'prueba') ? `(⏳ ${u.dias_restantes}d)` : '';
 
                     listaUsr.innerHTML += `
-                        <div style="padding:10px 6px; border-bottom:1px solid var(--border-card); display:flex; flex-direction:column; gap:6px;">
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                <div>
-                                    <b style="font-size:1rem; color:var(--text-main);">${u.nombre}</b><br>
-                                    <small style="color:var(--text-muted);">${u.email} | Rol: <b>${u.rol}</b></small>
-                                </div>
-                                <span style="background:${color}20; color:${color}; border:1px solid ${color}; padding:2px 8px; border-radius:10px; font-weight:800; font-size:0.8rem;">
-                                    ${u.estado.toUpperCase()}
-                                </span>
+                        <div style="padding:10px 4px; border-bottom:1px solid var(--border-card); display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                            <div>
+                                <b style="font-size:0.95rem; color:var(--text-main);">${u.nombre}</b><br>
+                                <span style="color:${color}; font-weight:800; font-size:0.8rem;">${u.estado.toUpperCase()}</span> ${diasInfo} | <small style="color:var(--text-muted);">${u.rol}</small>
                             </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
-                                <small style="color:var(--text-muted);">${diasInfo}</small>
-                                <select onchange="cambiarEstadoUsuarioDesdeMobile(${u.id}, this.value)" style="padding:6px 10px; border-radius:8px; border:1.5px solid var(--border-card); font-weight:700; font-size:0.9rem; background:var(--input-bg); color:var(--text-main);">
-                                    <option value="" disabled selected>Cambiar estado...</option>
+                            <div>
+                                <select onchange="cambiarEstadoUsuarioDesdeMobile(${u.id}, this.value)" style="padding:6px 8px; border-radius:8px; border:1.5px solid var(--border-card); font-weight:700; font-size:0.85rem; background:var(--input-bg); color:var(--text-main); cursor:pointer;">
+                                    <option value="" disabled selected>Cambiar...</option>
                                     <option value="activo" ${u.estado === 'activo' ? 'disabled' : ''}>🟢 Activar (Pagado)</option>
                                     <option value="prueba" ${u.estado === 'prueba' ? 'disabled' : ''}>🟠 Modo Prueba</option>
                                     <option value="suspendido" ${u.estado === 'suspendido' ? 'disabled' : ''}>🔴 Suspender</option>
@@ -710,7 +712,7 @@ async function abrirModalAdminMobile(e) {
                     `;
                 });
             } else {
-                listaUsr.innerHTML = '<p style="color:var(--text-muted); margin:0;">Sin usuarios registrados.</p>';
+                listaUsr.innerHTML = '<p style="color:var(--text-muted);">Sin usuarios registrados.</p>';
             }
 
             if (data.ranking && data.ranking.length > 0) {
@@ -721,7 +723,7 @@ async function abrirModalAdminMobile(e) {
                 html += '</ol>';
                 boxRank.innerHTML = html;
             } else {
-                boxRank.innerHTML = '<p style="color:var(--text-muted); margin:0;">Sin consultas registradas.</p>';
+                boxRank.innerHTML = '<p style="color:var(--text-muted);">Sin consultas registradas.</p>';
             }
 
             if (boxEventos) {
@@ -737,12 +739,9 @@ async function abrirModalAdminMobile(e) {
                     htmlEventos += '</ul>';
                     boxEventos.innerHTML = htmlEventos;
                 } else {
-                    boxEventos.innerHTML = '<p style="color:var(--text-muted); margin:0;">Sin actividad registrada.</p>';
+                    boxEventos.innerHTML = '<p style="color:var(--text-muted);">Sin actividad registrada.</p>';
                 }
             }
-
-        } else {
-            listaUsr.innerHTML = `<p style="color:#e53e3e;">${data.message || 'Error al cargar telemetría'}</p>`;
         }
     } catch(err) {
         listaUsr.innerHTML = '<p style="color:#e53e3e;">❌ Error al conectar con la telemetría.</p>';
@@ -751,7 +750,6 @@ async function abrirModalAdminMobile(e) {
 
 async function cambiarEstadoUsuarioDesdeMobile(userId, nuevoEstado) {
     if (!nuevoEstado) return;
-    lanzarToastMobile("⏳ Actualizando estado...");
     try {
         const formData = new URLSearchParams();
         formData.append('user_id', userId);
@@ -764,11 +762,10 @@ async function cambiarEstadoUsuarioDesdeMobile(userId, nuevoEstado) {
         });
         const d = await res.json();
         if (d.status === 'ok') {
-            lanzarToastMobile(`✅ Usuario #${userId} ahora está ${nuevoEstado.toUpperCase()}`);
             abrirModalAdminMobile();
+            lanzarToastMobile(`✅ Estado actualizado a ${nuevoEstado.toUpperCase()}`);
         } else {
             alert("⚠️ " + (d.message || "No se pudo actualizar"));
-            abrirModalAdminMobile();
         }
     } catch(e) {
         alert("❌ Error de red al intentar actualizar estado");
@@ -779,10 +776,17 @@ function cerrarModalAdminMobile() {
     document.getElementById('modalAdminMobile').classList.remove('activa');
 }
 
-// 6. BÚSQUEDA Y FAVORITOS
+// 11. BÚSQUEDA Y FAVORITOS
 function buscarClimaMobile() {
     const txt = document.getElementById('inputCiudadM').value.trim();
-    if (txt) consultarClimaCompletoMobile(txt);
+    if (!txt) return;
+
+    if (!validarFormatoUbicacionMobile(txt)) {
+        abrirModalFormatoInvalidoM();
+        return;
+    }
+
+    consultarClimaCompletoMobile(txt);
 }
 
 function activarGpsMobile() {
@@ -807,7 +811,7 @@ function guardarFavoritoMobile() {
 function renderizarPillsFavoritos() {
     const cont = document.getElementById('contenedorPillsFavsM');
     if (!cont) return;
-    const favs = JSON.parse(localStorage.getItem('favs_m') || '[]');
+    const favs = JSON.parse(localStorage.getItem('favs_m') || '["Crespo, Entre Ríos, AR"]');
     cont.innerHTML = '';
     favs.forEach(c => {
         const nombreCorto = c.split(',')[0];
