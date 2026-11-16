@@ -3,460 +3,716 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AuraTerra Mobile</title>
+    <meta name="theme-color" content="#1a365d">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>AuraTerra Mobile — PWA</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./img/logoAuraTerra.jpeg">
+    <link rel="stylesheet" href="./css/mobile.css">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; transition: background-color 0.3s ease, color 0.3s ease; }
-        
-        /* Paleta Modo Día */
-        :root {
-            --bg-body: #f0f4f8;
-            --bg-card: #ffffff;
-            --bg-card-alt: #f8fafc;
-            --border-card: #e2e8f0;
-            --text-main: #2d3748;
-            --text-sub: #4a5568;
-            --text-muted: #718096;
-            --shadow-card: 0 4px 12px rgba(0,0,0,0.05);
-            --header-bg: #ffffff;
-            --input-bg: #ffffff;
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0; padding: 0;
+            background: #f0f4f8;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #2d3748;
+            overflow-x: hidden;
+        }
+        /* Cohete de Carga Mobile */
+        .rocket-loader-mobile {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%);
+            color: #ffffff;
+            z-index: 999999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+        }
+        .rocket-loader-mobile.activo {
+            display: flex;
+            animation: autoHideMobileLoader 0.45s ease 1.7s forwards;
+        }
+        @keyframes autoHideMobileLoader {
+            to { opacity: 0; visibility: hidden; pointer-events: none; display: none; }
         }
 
-        /* Paleta Modo Noche (20:00 hs a 06:30 hs) */
-        body.modo-noche {
-            --bg-body: #0b1120;
-            --bg-card: #1e293b;
-            --bg-card-alt: #0f172a;
-            --border-card: #334155;
-            --text-main: #f1f5f9;
-            --text-sub: #cbd5e1;
-            --text-muted: #94a3b8;
-            --shadow-card: 0 4px 14px rgba(0,0,0,0.35);
-            --header-bg: #1e293b;
-            --input-bg: #0f172a;
+        /* Banner Push Nativos / In-App en la parte superior */
+        .push-banner-top {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            right: 14px;
+            max-width: 500px;
+            margin: 0 auto;
+            background: #1a202c;
+            color: #ffffff;
+            padding: 14px 16px;
+            border-radius: 16px;
+            box-shadow: 0 14px 32px rgba(0,0,0,0.35);
+            border-left: 6px solid #38a169;
+            z-index: 999999;
+            align-items: center;
+            gap: 12px;
+            animation: slideDownPush 0.35s ease;
+        }
+        @keyframes slideDownPush {
+            from { transform: translateY(-40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-body); color: var(--text-main); -webkit-tap-highlight-color: transparent; }
-        
-        .vista-mobile { display: none; padding: 16px; min-height: 100vh; }
-        .vista-mobile.activa { display: block; }
-        
-        .header-auth-m { text-align: center; padding: 18px 10px 14px 10px; }
-        .logo-m { max-width: 220px; width: 70%; height: auto; display: block; margin: 0 auto; border-radius: 12px; }
+        /* Contenedor Principal Tipo App Móvil */
+        .mobile-shell {
+            max-width: 560px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 30px;
+        }
 
-        .tabs-auth-m { display: flex; gap: 10px; margin: 15px 0 18px 0; }
-        .tab-m { flex: 1; height: 50px; border-radius: 12px; border: none; background: #cbd5e1; font-size: 1.05rem; font-weight: 700; color: #1e293b; cursor: pointer; }
-        .tab-m.activa { background: #3182ce; color: #ffffff; }
+        /* Tarjetas de Autenticación Mobile */
+        .auth-view-mobile { padding: 18px 16px; }
+        .auth-card-m {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 22px 18px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
+        }
+        .tabs-auth-m { display: flex; gap: 8px; margin-bottom: 18px; }
+        .tab-btn-m {
+            flex: 1; padding: 11px; border: none; background: #e2e8f0;
+            font-weight: 800; border-radius: 12px; cursor: pointer; font-size: 0.95rem; color: #4a5568;
+        }
+        .tab-btn-m.active { background: #3182ce; color: #ffffff; }
+        .form-group-m { margin-bottom: 14px; text-align: left; }
+        .form-group-m label { display: block; font-weight: 700; margin-bottom: 5px; font-size: 0.9rem; }
+        .form-group-m input, .form-group-m select {
+            width: 100%; height: 46px; border-radius: 12px; border: 1.5px solid #cbd5e0;
+            padding: 0 14px; font-size: 0.98rem; outline: none; background: #fff;
+        }
+        .form-group-m input:focus, .form-group-m select:focus { border-color: #3182ce; }
+        .password-wrap-m { position: relative; display: flex; align-items: center; }
+        .password-wrap-m input { padding-right: 46px; }
+        .eye-btn-m {
+            position: absolute; right: 8px; background: none; border: none;
+            font-size: 1.3rem; cursor: pointer; padding: 4px;
+        }
+        .btn-submit-m {
+            width: 100%; height: 48px; border-radius: 12px; border: none;
+            background: #3182ce; color: #fff; font-size: 1rem; font-weight: 800;
+            cursor: pointer; margin-top: 6px;
+        }
+        .req-list-m { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+        .req-badge-m {
+            font-size: 0.74rem; font-weight: 700; padding: 4px 8px;
+            border-radius: 10px; background: #edf2f7; color: #718096;
+        }
+        .req-badge-m.cumplido { background: #c6f6d5; color: #22543d; }
 
-        .info-pilares-box { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; text-align: left; }
-        .pilar-card-m { padding: 14px 16px; border-radius: 14px; border-left: 6px solid; box-shadow: var(--shadow-card); background: var(--bg-card); }
-        .pilar-agro { border-color: #38a169; }
-        .pilar-events { border-color: #3182ce; }
-        .pilar-card-m h4 { margin: 0 0 6px 0; font-size: 1.15rem; }
-        .pilar-agro h4 { color: #38a169; }
-        .pilar-events h4 { color: #3182ce; }
-        .pilar-card-m p { margin: 0; font-size: 0.95rem; color: var(--text-sub); line-height: 1.45; }
+        /* Header Mobile Operativo (Con Eslogan Completo sin cortar) */
+        .header-m {
+            background: #ffffff;
+            padding: 12px 14px;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+        .header-top-row-m {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .logo-m {
+            height: 52px; width: auto; border-radius: 10px; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        /* Eslogan completo, legible y sin recortarse con puntos suspensivos */
+        .slogan-m {
+            font-size: 0.82rem;
+            color: #4a5568;
+            font-style: italic;
+            font-weight: 600;
+            line-height: 1.35;
+            white-space: normal;
+            overflow: visible;
+            margin: 8px auto 6px auto;
+            text-align: center;
+            padding: 0 4px;
+        }
+        .pills-bar-m {
+            display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+            align-items: center; margin-top: 4px;
+        }
+        .pill-m {
+            padding: 4px 10px; border-radius: 16px; font-size: 0.76rem; font-weight: 800;
+        }
+        .btn-dual-m {
+            padding: 4px 10px; border-radius: 16px; font-size: 0.76rem; font-weight: 800;
+            border: 1.5px solid #805ad5; background: #faf5ff; color: #553c9a; cursor: pointer;
+        }
 
-        .campo-m { margin-bottom: 16px; text-align: left; }
-        .campo-m label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 1.05rem; color: var(--text-main); }
-        .campo-m input, .campo-m select { width: 100%; height: 54px; border-radius: 12px; border: 1.5px solid var(--border-card); padding: 0 16px; font-size: 1.1rem; background: var(--input-bg); color: var(--text-main); outline: none; }
-        .campo-m input:focus, .campo-m select:focus { border-color: #3182ce; }
-        
-        .pass-wrapper-m { position: relative; display: flex; align-items: center; }
-        .pass-wrapper-m input { padding-right: 52px; }
-        .btn-eye-m { position: absolute; right: 6px; height: 100%; width: 44px; background: none; border: none; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        /* Buscador Mobile */
+        .search-box-m {
+            margin: 12px 12px 0 12px;
+            background: #ffffff;
+            padding: 10px;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+        .search-row-m { display: flex; gap: 6px; align-items: center; }
+        .search-row-m input {
+            flex: 1; height: 44px; border-radius: 10px; border: 1.5px solid #cbd5e0;
+            padding: 0 12px; font-size: 0.95rem; font-weight: 600; min-width: 0; outline: none;
+        }
+        .btn-go-m {
+            height: 44px; padding: 0 14px; background: #3182ce; color: #fff;
+            border: none; border-radius: 10px; font-weight: 800; font-size: 0.9rem; cursor: pointer;
+        }
+        .btn-sq-m {
+            height: 44px; width: 42px; background: #f7fafc; border: 1.5px solid #cbd5e0;
+            border-radius: 10px; font-size: 1.15rem; cursor: pointer; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
 
-        .check-recordar-m { display: flex; align-items: center; gap: 12px; margin: 18px 0; font-size: 1rem; font-weight: 600; color: var(--text-sub); }
-        .check-recordar-m input { width: 22px; height: 22px; accent-color: #3182ce; }
+        /* Tarjetas Dashboard Mobile */
+        .card-m {
+            margin: 12px 12px 0 12px;
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 18px 16px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+            border: 1px solid #edf2f7;
+        }
+        .metrics-grid-m {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;
+        }
+        .metric-item-m {
+            background: #f8fafc; padding: 10px 12px; border-radius: 10px;
+            display: flex; justify-content: space-between; align-items: center; font-size: 0.86rem;
+        }
+        .days-scroll-m {
+            display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px;
+        }
+        .day-card-m {
+            min-width: 112px; background: #f8fafc; border: 1.5px solid #e2e8f0;
+            border-radius: 14px; padding: 12px 10px; text-align: center; cursor: pointer; flex-shrink: 0;
+        }
+        .hours-scroll-m {
+            display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px;
+        }
+        .hour-card-m {
+            min-width: 118px; border-radius: 12px; padding: 10px;
+            text-align: center; display: flex; flex-direction: column; gap: 3px; flex-shrink: 0;
+        }
 
-        .btn-primario-m { width: 100%; height: 56px; border-radius: 12px; border: none; background: #3182ce; color: #ffffff; font-size: 1.15rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(49,130,206,0.3); }
-        .btn-primario-m:active { transform: scale(0.98); }
+        /* Modales Mobile */
+        .modal-layer-m {
+            display: none; position: fixed; inset: 0;
+            background: rgba(15, 23, 42, 0.72); backdrop-filter: blur(4px);
+            z-index: 99999; align-items: center; justify-content: center; padding: 14px;
+        }
+        .modal-layer-m.activa { display: flex; }
+        .modal-win-m {
+            background: #ffffff; border-radius: 18px; width: 100%; max-width: 460px;
+            max-height: 88vh; overflow-y: auto; padding: 22px 18px; text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
 
-        .msg-auth-m { text-align: center; margin-top: 14px; font-size: 1.05rem; font-weight: 700; line-height: 1.4; }
+        /* Toast Mobile */
+        .toast-m {
+            display: none; position: fixed; bottom: 18px; left: 14px; right: 14px;
+            max-width: 480px; margin: 0 auto; background: #1a365d; color: #ffffff;
+            padding: 13px 16px; border-radius: 14px; font-weight: 700; font-size: 0.88rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); border-left: 5px solid #38a169; z-index: 999999;
+        }
 
-        /* Dashboard UI */
-        .header-dashboard-m { background: var(--header-bg); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-radius: 14px; margin-bottom: 14px; box-shadow: var(--shadow-card); position: relative; border: 1px solid var(--border-card); }
-        .logo-pequeno-m { max-height: 44px; width: auto; border-radius: 6px; }
-        .btn-soporte-m-pill { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
-        .usuario-badge-m { background: var(--bg-card-alt); padding: 8px 14px; border-radius: 20px; font-weight: 700; font-size: 0.95rem; cursor: pointer; border: 1px solid var(--border-card); }
-        
-        .dropdown-usuario-m { position: absolute; top: 64px; right: 16px; background: var(--bg-card); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.25); padding: 14px; z-index: 99999; border: 1px solid var(--border-card); min-width: 240px; }
-
-        .buscador-card-m { background: var(--bg-card); padding: 16px; border-radius: 14px; box-shadow: var(--shadow-card); margin-bottom: 14px; border: 1px solid var(--border-card); }
-        #inputCiudadM { width: 100%; height: 56px; border-radius: 12px; border: 2px solid var(--border-card); padding: 0 16px; font-size: 1.1rem; font-weight: 600; outline: none; margin-bottom: 10px; background: var(--input-bg); color: var(--text-main); }
-        #inputCiudadM::placeholder { font-size: 0.95rem; color: var(--text-muted); font-weight: 500; }
-        
-        .acciones-buscador-m { display: flex; gap: 8px; }
-        .btn-accion-m { flex: 1; height: 50px; background: #3182ce; color: #fff; font-weight: 700; font-size: 1.05rem; border: none; border-radius: 10px; cursor: pointer; }
-        .btn-icono-m { width: 50px; height: 50px; background: var(--bg-card-alt); border: 1.5px solid var(--border-card); border-radius: 10px; font-size: 1.3rem; cursor: pointer; color: var(--text-main); }
-
-        .card-meteo-m { background: var(--bg-card); border-radius: 16px; padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow-card); border: 1px solid var(--border-card); }
-        .cabecera-card-m { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .pill-consenso-m { background: #ebf8ff; color: #2b6cb0; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; }
-        body.modo-noche .pill-consenso-m { background: #1e3a8a; color: #bfdbfe; }
-        
-        .cuerpo-clima-m { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
-        .temp-enorme-m { font-size: 3.6rem; font-weight: 800; color: var(--text-main); line-height: 1; }
-        .detalles-actual-m { flex: 1; text-align: right; }
-        .desc-m { font-size: 1.25rem; font-weight: 700; text-transform: capitalize; color: var(--text-main); margin-bottom: 6px; }
-        .metricas-sub-m { font-size: 0.95rem; color: var(--text-sub); display: flex; flex-direction: column; gap: 4px; }
-
-        .carrusel-pronostico-m { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
-        .dia-chip-m { min-width: 140px; background: var(--bg-card-alt); border: 1.5px solid var(--border-card); border-radius: 14px; padding: 12px; text-align: center; flex-shrink: 0; cursor: pointer; }
-        .dia-chip-m:active { transform: scale(0.96); }
-        .temp-extremos { font-size: 0.9rem; font-weight: 700; margin: 4px 0; }
-        .temp-extremos .max { color: #e53e3e; }
-        .temp-extremos .min { color: #3182ce; }
-
-        .modal-mobile-sheet { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 999999; align-items: flex-end; justify-content: center; }
-        .modal-mobile-sheet.activa { display: flex; }
-        .modal-sheet-content { background: var(--bg-card); color: var(--text-main); width: 100%; max-height: 88vh; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 22px 18px 28px 18px; overflow-y: auto; box-shadow: 0 -10px 25px rgba(0,0,0,0.35); animation: slideUp 0.25s ease-out; text-align: left; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .sheet-handle { width: 44px; height: 5px; background: var(--border-card); border-radius: 10px; margin: 0 auto 16px auto; }
-        
-        .item-horario-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 6px; border-bottom: 1px solid var(--border-card); font-size: 1rem; }
-        .toast-app { display: none; position: fixed; bottom: 20px; left: 16px; right: 16px; background: #2d3748; color: #fff; padding: 14px 18px; border-radius: 12px; text-align: center; font-weight: 700; z-index: 9999999; }
+        @keyframes shakeM {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        .shake-m { animation: shakeM 0.35s ease; }
     </style>
 </head>
 <body>
-    <div id="toastApp" class="toast-app"></div>
 
-    <!-- 1. VISTA DE AUTENTICACIÓN / ACCESO -->
-    <div id="vistaAuthMobile" class="vista-mobile activa">
-        <header class="header-auth-m">
-            <button type="button" onclick="abrirModalInfoCorporativoMobile()" style="background:none; border:none; cursor:pointer;">
-                <img src="./img/logoAuraTerra.jpeg?v=7" alt="AuraTerra" class="logo-m">
-            </button>
-        </header>
-
-        <div class="tabs-auth-m">
-            <button class="tab-m activa" id="tabLoginM" onclick="cambiarTabMobile('login')">Ingresar</button>
-            <button class="tab-m" id="tabRegisterM" onclick="cambiarTabMobile('registro')">Registrarse</button>
-        </div>
-
-        <div class="info-pilares-box">
-            <div class="pilar-card-m pilar-agro">
-                <h4>🌾 AuraTerra Agro</h4>
-                <p>Monitoreo fitosanitario bajo la <b>Ley Provincial Nº 6.599</b> de Entre Ríos (7 a 15 km/h) y estándar <b>INTA/BPA</b>.</p>
-            </div>
-            <div class="pilar-card-m pilar-events">
-                <h4>🎪 AuraEvents Logística</h4>
-                <p>Seguridad de montajes temporales, <b>carpas y gazebos</b> (alerta a &gt;18 km/h) y prevención por condensación de rocío.</p>
-            </div>
-        </div>
-
-        <form id="formLoginMobile" onsubmit="iniciarLoginMobile(event)">
-            <div class="campo-m">
-                <label>Correo Electrónico:</label>
-                <input type="email" id="emailLoginM" required placeholder="tu-correo@ejemplo.com" autocomplete="email">
-            </div>
-            <div class="campo-m">
-                <label>Contraseña:</label>
-                <div class="pass-wrapper-m">
-                    <input type="password" id="passLoginM" required placeholder="••••••••" autocomplete="current-password">
-                    <button type="button" class="btn-eye-m" onclick="toggleOjoPass('passLoginM', this)">🙈</button>
-                </div>
-            </div>
-            <div class="check-recordar-m">
-                <input type="checkbox" id="checkRecordarM" checked>
-                <label for="checkRecordarM">Recordar credenciales en este móvil</label>
-            </div>
-            <button type="submit" class="btn-primario-m">Ingresar al Dashboard ➔</button>
-        </form>
-
-        <form id="formRegMobile" style="display: none;" onsubmit="iniciarRegistroMobile(event)">
-            <div class="campo-m">
-                <label>Nombre y Apellido:</label>
-                <input type="text" id="nombreRegM" required placeholder="Ej: Soledad Gareis">
-            </div>
-            <div class="campo-m">
-                <label>Correo Electrónico:</label>
-                <input type="email" id="emailRegM" required placeholder="tu-correo@ejemplo.com" autocomplete="email">
-            </div>
-            <div class="campo-m">
-                <label>Contraseña:</label>
-                <div class="pass-wrapper-m">
-                    <input type="password" id="passRegM" required placeholder="Mínimo 8 caracteres" autocomplete="new-password">
-                    <button type="button" class="btn-eye-m" onclick="toggleOjoPass('passRegM', this)">🙈</button>
-                </div>
-            </div>
-            <div class="campo-m">
-                <label>Elegí tu Perfil Operativo:</label>
-                <select id="rolRegM">
-                    <option value="agricultor">🌾 AuraTerra Agro (Pulverización / Siembra)</option>
-                    <option value="planificador">🎪 AuraEvents (Carpas / Eventos al Aire Libre)</option>
-                </select>
-            </div>
-            <button type="submit" class="btn-primario-m" style="background:#27ae60;">Completar Registro ➔</button>
-        </form>
-
-        <div style="margin-top: 22px; text-align: center; font-size: 0.95rem;">
-            <a href="mailto:auraterraclima@hotmail.com?subject=Contacto%20AuraTerra%20Mobile" style="color: #3182ce; font-weight: 700; text-decoration: none;">
-                ✉️ Contactar Soporte (auraterraclima@hotmail.com)
-            </a>
-        </div>
-
-        <div id="msgAuthMobile" class="msg-auth-m"></div>
+    <!-- Cohete de Bienvenida -->
+    <div id="rocketLoaderMobile" class="rocket-loader-mobile">
+        <div style="font-size: 4.2rem; margin-bottom: 12px;">🚀</div>
+        <h2 style="margin: 0 0 8px 0; font-size: 1.45rem; font-weight: 800;">Cargando el Dashboard de AuraTerra...</h2>
+        <p style="margin: 0; font-size: 0.98rem; color: #bee3f8;">¡Gracias por elegirnos! Sincronizando las 3 estaciones satelitales en vivo.</p>
     </div>
 
-    <!-- 2. VISTA DASHBOARD (PROTEGIDA) -->
-    <div id="vistaDashboardMobile" class="vista-mobile">
-        <header class="header-dashboard-m">
-            <button type="button" onclick="abrirModalInfoCorporativoMobile()" style="background:none; border:none; cursor:pointer;">
-                <img src="./img/logoAuraTerra.jpeg?v=7" alt="Logo" class="logo-pequeno-m">
-            </button>
-            <div style="display:flex; align-items:center; gap:8px;">
-                <a href="mailto:auraterraclima@hotmail.com?subject=Contacto%20y%20Soporte%20AuraTerra%20Mobile" class="btn-soporte-m-pill" title="Soporte y contacto">
-                    ✉️ Soporte
-                </a>
-                <span id="indicadorModoDiaNoche" style="font-size:1.2rem;">☀️</span>
-                <div class="usuario-badge-m" onclick="toggleMenuUsuarioMobile()">
-                    <span id="badgeRolUsuarioM">Agro</span> ▾
+    <!-- Banner de Notificación Push Interactiva (Funciona siempre en localhost y por IP) -->
+    <div id="pushSimuladaBannerM" class="push-banner-top" onclick="this.style.display='none'">
+        <img src="./img/logoAuraTerra.jpeg" alt="Icon" style="width:42px; height:42px; border-radius:10px; flex-shrink:0;">
+        <div style="flex:1; text-align:left;">
+            <div style="font-size:0.75rem; color:#68d391; font-weight:800; text-transform:uppercase;">🛰️ AuraTerra Push Service • Ahora</div>
+            <div id="pushSimuladaTituloM" style="font-size:0.92rem; font-weight:800; color:#fff; margin:2px 0;">Monitoreo Satelital Activo</div>
+            <div id="pushSimuladaCuerpoM" style="font-size:0.82rem; color:#cbd5e0; line-height:1.35;">Alertas sonoras, vibración háptica y avisos de ráfagas activados.</div>
+        </div>
+        <span style="font-size:1.1rem; color:#a0aec0; cursor:pointer;">✕</span>
+    </div>
+
+    <!-- Notificación Flotante (Toast) -->
+    <div id="toastMobile" class="toast-m"></div>
+
+    <div class="mobile-shell">
+
+        <!-- ==========================================
+             VISTA 1: LOGIN Y REGISTRO MOBILE
+             ========================================== -->
+        <section id="vistaAuthMobile" class="auth-view-mobile">
+            <div class="auth-card-m" style="text-align: center;">
+                <img src="./img/logoAuraTerra.jpeg?v=10" alt="AuraTerra Logo" style="max-width: 165px; border-radius: 12px; margin-bottom: 8px;">
+                <p style="margin: 0 0 14px 0; font-size: 0.85rem; font-style: italic; font-weight: 600; color: #4a5568; line-height: 1.4;">
+                    "Los 21gr del timo que acompañan el éxito de la organización de tu actividad al aire libre"
+                </p>
+
+                <div class="tabs-auth-m">
+                    <button class="tab-btn-m active" id="tabLoginM" onclick="alternarTabM('login')">Iniciar Sesión</button>
+                    <button class="tab-btn-m" id="tabRegM" onclick="alternarTabM('register')">Registrarse</button>
                 </div>
-            </div>
-            <div id="dropdownMenuMobile" class="dropdown-usuario-m" style="display:none;">
-                <div style="font-weight:bold; font-size:1rem; margin-bottom:8px; color:var(--text-main);">👤 <span id="lblNombreUsuarioMenuM">Usuario</span></div>
-                <a href="#" id="linkAdminConsoleM" style="display:none; color:#3182ce; font-weight:bold; padding:8px 0; text-decoration:none; border-top:1px solid var(--border-card);" onclick="abrirModalAdminMobile(event)">⚙️ Consola Admin</a>
-                <a href="mailto:auraterraclima@hotmail.com?subject=Consulta%20AuraTerra%20Mobile" style="color:#2b6cb0; font-weight:bold; padding:8px 0; text-decoration:none; display:block; border-top:1px solid var(--border-card);">✉️ Soporte Técnico</a>
-                <a href="#" style="color:#e53e3e; font-weight:bold; padding:8px 0; text-decoration:none; display:block; border-top:1px solid var(--border-card); margin-top:6px;" onclick="cerrarSesionMobile(event)">Cerrar Sesión</a>
-            </div>
-        </header>
 
-        <main>
-            <!-- Buscador con Predictivo Completo de Argentina -->
-            <div class="buscador-card-m">
-                <input 
-                    type="text" 
-                    id="inputCiudadM" 
-                    list="datalistProvinciasMobile" 
-                    placeholder="Formato requerido: Ciudad, Provincia, AR" 
-                    value="Crespo, Entre Ríos, AR"
-                >
-                <datalist id="datalistProvinciasMobile">
-                    <!-- ENTRE RÍOS -->
-                    <option value="Crespo, Entre Ríos, AR">
-                    <option value="Paraná, Entre Ríos, AR">
-                    <option value="Concordia, Entre Ríos, AR">
-                    <option value="Gualeguaychú, Entre Ríos, AR">
-                    <option value="Concepción del Uruguay, Entre Ríos, AR">
-                    <option value="Gualeguay, Entre Ríos, AR">
-                    <option value="Villaguay, Entre Ríos, AR">
-                    <option value="Chajarí, Entre Ríos, AR">
-                    <option value="Victoria, Entre Ríos, AR">
-                    <option value="La Paz, Entre Ríos, AR">
-                    <option value="Nogoyá, Entre Ríos, AR">
-                    <option value="Colón, Entre Ríos, AR">
-                    <option value="Diamante, Entre Ríos, AR">
-                    <option value="Santa Elena, Entre Ríos, AR">
-                    <option value="Federal, Entre Ríos, AR">
-                    <option value="Rosario del Tala, Entre Ríos, AR">
-                    <option value="San Salvador, Entre Ríos, AR">
-                    <option value="San José de Feliciano, Entre Ríos, AR">
-                    <option value="Viale, Entre Ríos, AR">
-                    <option value="Seguí, Entre Ríos, AR">
-                    <option value="Ramírez, Entre Ríos, AR">
-                    <option value="Bovril, Entre Ríos, AR">
-                    <option value="Urdinarrain, Entre Ríos, AR">
-
-                    <!-- SANTA FE -->
-                    <option value="Santa Fe, Santa Fe, AR">
-                    <option value="Rosario, Santa Fe, AR">
-                    <option value="Rafaela, Santa Fe, AR">
-                    <option value="Venado Tuerto, Santa Fe, AR">
-                    <option value="Reconquista, Santa Fe, AR">
-                    <option value="Santo Tomé, Santa Fe, AR">
-                    <option value="Esperanza, Santa Fe, AR">
-                    <option value="San Lorenzo, Santa Fe, AR">
-
-                    <!-- BUENOS AIRES Y CABA -->
-                    <option value="Buenos Aires, CABA, AR">
-                    <option value="La Plata, Buenos Aires, AR">
-                    <option value="Mar del Plata, Buenos Aires, AR">
-                    <option value="Bahía Blanca, Buenos Aires, AR">
-                    <option value="Tandil, Buenos Aires, AR">
-                    <option value="Pergamino, Buenos Aires, AR">
-                    <option value="Junín, Buenos Aires, AR">
-                    <option value="Olavarría, Buenos Aires, AR">
-
-                    <!-- CÓRDOBA -->
-                    <option value="Córdoba, Córdoba, AR">
-                    <option value="Río Cuarto, Córdoba, AR">
-                    <option value="Villa María, Córdoba, AR">
-                    <option value="San Francisco, Córdoba, AR">
-                    <option value="Villa Carlos Paz, Córdoba, AR">
-                    <option value="Río Tercero, Córdoba, AR">
-
-                    <!-- CORRIENTES Y MISIONES -->
-                    <option value="Corrientes, Corrientes, AR">
-                    <option value="Goya, Corrientes, AR">
-                    <option value="Paso de los Libres, Corrientes, AR">
-                    <option value="Posadas, Misiones, AR">
-                    <option value="Puerto Iguazú, Misiones, AR">
-                    <option value="Oberá, Misiones, AR">
-
-                    <!-- CHACO Y FORMOSA -->
-                    <option value="Resistencia, Chaco, AR">
-                    <option value="Presidencia Roque Sáenz Peña, Chaco, AR">
-                    <option value="Formosa, Formosa, AR">
-
-                    <!-- SANTIAGO, TUCUMÁN, SALTA, JUJUY, CATAMARCA, LA RIOJA -->
-                    <option value="Santiago del Estero, Santiago del Estero, AR">
-                    <option value="San Miguel de Tucumán, Tucumán, AR">
-                    <option value="Salta, Salta, AR">
-                    <option value="San Salvador de Jujuy, Jujuy, AR">
-                    <option value="San Fernando del Valle de Catamarca, Catamarca, AR">
-                    <option value="La Rioja, La Rioja, AR">
-
-                    <!-- CUYO -->
-                    <option value="Mendoza, Mendoza, AR">
-                    <option value="San Rafael, Mendoza, AR">
-                    <option value="San Juan, San Juan, AR">
-                    <option value="San Luis, San Luis, AR">
-                    <option value="Villa Mercedes, San Luis, AR">
-
-                    <!-- PATAGONIA Y LA PAMPA -->
-                    <option value="Santa Rosa, La Pampa, AR">
-                    <option value="Neuquén, Neuquén, AR">
-                    <option value="San Carlos de Bariloche, Río Negro, AR">
-                    <option value="Viedma, Río Negro, AR">
-                    <option value="Comodoro Rivadavia, Chubut, AR">
-                    <option value="Puerto Madryn, Chubut, AR">
-                    <option value="Río Gallegos, Santa Cruz, AR">
-                    <option value="Ushuaia, Tierra del Fuego, AR">
-                </datalist>
-
-                <div class="acciones-buscador-m">
-                    <button class="btn-accion-m" onclick="buscarClimaMobile()">🔍 Consultar</button>
-                    <button class="btn-icono-m" onclick="activarGpsMobile()" title="Mi ubicación">📍</button>
-                    <button class="btn-icono-m" onclick="guardarFavoritoMobile()" title="Favoritos">⭐</button>
-                </div>
-            </div>
-
-            <div id="contenedorPillsFavsM" style="display:flex; gap:8px; overflow-x:auto; margin-bottom:14px;"></div>
-
-            <!-- Clima Actual Consensuado -->
-            <div class="card-meteo-m">
-                <div class="cabecera-card-m">
-                    <span id="ciudadLabelM" style="font-weight:700; font-size:1.1rem;">📍 Cargando...</span>
-                    <span id="consensoPillM" class="pill-consenso-m">⚡ Consenso</span>
-                </div>
-                <div class="cuerpo-clima-m">
-                    <div class="temp-enorme-m" id="tempPrincipalM">--°</div>
-                    <div class="detalles-actual-m">
-                        <div id="descClimaM" class="desc-m">Sincronizando...</div>
-                        <div class="metricas-sub-m">
-                            <span>💧 Humedad: <b id="humedadM">--%</b></span>
-                            <span>💨 Viento: <b id="vientoM">-- km/h</b></span>
-                            <span>🧭 Dirección: <b id="direccionVientoM">--</b></span>
+                <!-- Formulario Login Mobile -->
+                <form id="formLoginM" onsubmit="ejecutarLoginM(event)">
+                    <div class="form-group-m">
+                        <label>Correo Electrónico:</label>
+                        <input type="email" id="emailLoginM" required placeholder="tu-correo@ejemplo.com" autocomplete="email">
+                    </div>
+                    <div class="form-group-m">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                            <label style="margin:0;">Contraseña:</label>
+                            <a href="#" onclick="abrirModalRecuperarM(event)" style="font-size:0.82rem; color:#3182ce; font-weight:700; text-decoration:none;">¿Olvidaste tu contraseña?</a>
+                        </div>
+                        <div class="password-wrap-m">
+                            <input type="password" id="passLoginM" required placeholder="••••••••" autocomplete="current-password">
+                            <button type="button" class="eye-btn-m" onclick="togglePassM('passLoginM', this)">🙈</button>
                         </div>
                     </div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin: 12px 0; text-align: left;">
+                        <input type="checkbox" id="checkRecordarM" style="width: 18px; height: 18px; cursor: pointer;">
+                        <label for="checkRecordarM" style="margin: 0; font-size: 0.85rem; color: #4a5568; cursor: pointer;">Recordar credenciales y mantener sesión iniciada</label>
+                    </div>
+                    <button type="submit" id="btnSubmitLoginM" class="btn-submit-m">Ingresar al Panel ➔</button>
+                </form>
+
+                <!-- Formulario Registro Mobile -->
+                <form id="formRegM" style="display: none;" onsubmit="ejecutarRegistroM(event)">
+                    <div class="form-group-m">
+                        <label>Nombre y Apellido:</label>
+                        <input type="text" id="nombreRegM" required placeholder="Ej: Juan Perez">
+                    </div>
+                    <div class="form-group-m">
+                        <label>Correo Electrónico:</label>
+                        <input type="email" id="emailRegM" required placeholder="tu-correo@ejemplo.com">
+                    </div>
+                    <div class="form-group-m">
+                        <label>Contraseña Segura:</label>
+                        <div class="password-wrap-m">
+                            <input type="password" id="passRegM" required placeholder="Mín. 6 caract., 1 mayúscula y 1 símbolo" oninput="evaluarRequisitosPassM(this.value)">
+                            <button type="button" class="eye-btn-m" onclick="togglePassM('passRegM', this)">🙈</button>
+                        </div>
+                        <div class="req-list-m">
+                            <span id="reqLenM" class="req-badge-m">✓ Mín. 6 caract.</span>
+                            <span id="reqMayusM" class="req-badge-m">✓ 1 Mayúscula</span>
+                            <span id="reqSimbM" class="req-badge-m">✓ 1 Símbolo (@#$!.)</span>
+                        </div>
+                    </div>
+                    <div class="form-group-m">
+                        <label>Tipo de Suscripción / Perfil:</label>
+                        <select id="rolRegM">
+                            <option value="agricultor">🌾 AuraTerra Agro (Pulverización / Siembra)</option>
+                            <option value="planificador">🎪 AuraEvents (Carpas / Eventos al Aire Libre)</option>
+                            <option value="ambos">🌟 Suscripción Dual Premium (Agro + AuraEvents)</option>
+                        </select>
+                    </div>
+                    <button type="submit" id="btnSubmitRegM" class="btn-submit-m" style="background: #27ae60;">Crear Cuenta (7 días de prueba) ➔</button>
+                </form>
+
+                <div id="msgAuthM" style="margin-top: 12px; font-weight: 700; font-size: 0.9rem;"></div>
+            </div>
+
+            <div class="auth-card-m" style="text-align: left; font-size: 0.85rem;">
+                <div style="border-left: 4px solid #38a169; background: #f0fff4; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px;">
+                    <b style="color: #22543d;">🌾 AuraTerra Agro:</b> Ley 6.599 ER (7 a 15 km/h), INTA/BPA, suelos y deriva.
+                </div>
+                <div style="border-left: 4px solid #3182ce; background: #ebf8ff; padding: 10px 12px; border-radius: 10px; margin-bottom: 8px;">
+                    <b style="color: #2b6cb0;">🎪 AuraEvents:</b> Ráfagas &gt;18 km/h, punto de rocío y Hora Dorada.
+                </div>
+                <div style="border-left: 4px solid #805ad5; background: #faf5ff; padding: 10px 12px; border-radius: 10px;">
+                    <b style="color: #553c9a;">🌟 Plan Dual:</b> Ambos paneles integrados en una sola cuenta.
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             VISTA 2: DASHBOARD OPERATIVO MOBILE
+             ========================================== -->
+        <section id="vistaDashboardMobile" style="display: none;">
+            <header class="header-m">
+                <div class="header-top-row-m">
+                    <img src="./img/logoAuraTerra.jpeg?v=10" alt="Logo" class="logo-m" onclick="abrirModalInstitucionalM()" title="Acerca de AuraTerra">
+                    
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <button id="btnInstalarPWAM" onclick="instalarPWAM()" style="background:#f0fff4; color:#22543d; border:1.5px solid #9ae6b4; border-radius:10px; padding:7px 10px; font-weight:800; font-size:0.78rem; cursor:pointer;">
+                            📲 App
+                        </button>
+                        <button onclick="abrirModalPerfilFavoritosM()" style="background:#f7fafc; border:1.5px solid #cbd5e0; border-radius:18px; padding:7px 11px; font-weight:800; font-size:0.82rem; color:#2d3748; cursor:pointer;">
+                            👤 <span id="lblNombreHeaderM">Usuario</span> ▾
+                        </button>
+                        <button onclick="cerrarSesionM()" style="background:#e53e3e; color:#fff; border:none; border-radius:10px; padding:7px 11px; font-weight:800; font-size:0.8rem; cursor:pointer;">
+                            Salir
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Eslogan Completo sin recortes -->
+                <div class="slogan-m">"Los 21gr del timo que acompañan el éxito de la organización de tu actividad al aire libre"</div>
+
+                <div class="pills-bar-m">
+                    <span id="pillPanelM" class="pill-m" style="background:#f0fff4; color:#22543d; border:1px solid #9ae6b4;">🌾 Panel Agro</span>
+                    <span id="pillEstadoM" class="pill-m" style="background:#f0fff4; color:#22543d;">🟢 Activo</span>
+                    <button id="btnSwitchDualM" class="btn-dual-m" style="display:none;" onclick="alternarPanelDualM()">
+                        🔄 Cambiar a AuraEvents
+                    </button>
+                </div>
+            </header>
+
+            <!-- Barra de Búsqueda Mobile -->
+            <div class="search-box-m">
+                <div class="search-row-m">
+                    <input type="text" id="inputCiudadM" list="datalistCiudadesM" placeholder="Ciudad, Provincia, AR" value="Crespo, Entre Ríos, AR">
+                    <button onclick="buscarClimaM()" class="btn-go-m">Ir</button>
+                    <button onclick="obtenerGpsM(true)" class="btn-sq-m" title="Mi ubicación GPS actual">📍</button>
+                    <button onclick="abrirModalGuardarFavActualM()" class="btn-sq-m" title="Guardar en favoritos">⭐</button>
+                </div>
+                <div id="bannerCargaM" style="display:none; margin-top:8px; background:#ebf8ff; border:1px solid #90cdf4; color:#2b6cb0; padding:8px 12px; border-radius:10px; font-size:0.82rem; font-weight:700;">
+                    🚀 Estamos cargando tu ciudad y promediando las 3 estaciones satelitales...
+                </div>
+            </div>
+
+            <!-- Alerta Temprana de Ráfagas (12 a 24 hs) -->
+            <div id="bannerAlertaTempranaM" class="card-m" style="display:none; background:#fff5f5; border:2px solid #fc8181;"></div>
+
+            <!-- Clima Actual Consensuado -->
+            <div class="card-m">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                    <div>
+                        <h2 id="lblCiudadM" style="margin:0; font-size:1.22rem; color:#1a202c;">📍 Crespo, Entre Ríos, AR</h2>
+                        <small id="lblFechaM" style="color:#718096; text-transform:capitalize;">Sincronizando...</small>
+                    </div>
+                    <span id="lblConsensoM" style="background:#ebf8ff; color:#2b6cb0; padding:4px 10px; border-radius:12px; font-weight:800; font-size:0.75rem; white-space:nowrap;">
+                        Consenso: 3 APIs
+                    </span>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin:12px 0; padding-bottom:12px; border-bottom:1px solid #edf2f7;">
+                    <div id="lblTempM" style="font-size:3.6rem; font-weight:900; color:#1a202c; line-height:1;">--°C</div>
+                    <div style="text-align:right;">
+                        <div id="lblDescM" style="font-size:1.15rem; font-weight:800; color:#3182ce; text-transform:capitalize;">Cargando...</div>
+                        <button id="btnActivarPushM" onclick="activarNotificacionesPushM()" style="margin-top:6px; background:#ebf8ff; border:1px solid #90cdf4; border-radius:8px; padding:5px 10px; font-size:0.76rem; font-weight:800; color:#2b6cb0; cursor:pointer;">
+                            🔔 Activar Alertas Push
+                        </button>
+                    </div>
+                </div>
+
+                <div class="metrics-grid-m">
+                    <div class="metric-item-m"><span>💧 Humedad</span><b id="lblHumM">--%</b></div>
+                    <div class="metric-item-m"><span>💨 Viento</span><b id="lblVientoM">-- km/h</b></div>
+                    <div class="metric-item-m"><span>🧭 Dirección</span><b id="lblDirM" style="color:#2b6cb0;">SE ↘️</b></div>
+                    <div class="metric-item-m"><span>🌡️ Sensación</span><b id="lblSensM">--°C</b></div>
+                    <div class="metric-item-m"><span>⏲️ Presión</span><b id="lblPresM">-- hPa</b></div>
+                    <div class="metric-item-m"><span>👁️ Visibilidad</span><b id="lblVisM">-- km</b></div>
                 </div>
             </div>
 
             <!-- Evaluación Normativa Legal -->
-            <div class="card-meteo-m" id="cardLegalMobile" style="border-left: 5px solid #38a169;">
-                <h3 id="tituloLegalM" style="font-size:1.15rem; margin-bottom:6px;">⚖️ Evaluación Normativa</h3>
-                <div id="contenidoLegalM" style="font-size:1rem; line-height:1.45;">Evaluando...</div>
-            </div>
-
-            <!-- Próximos 5 Días -->
-            <div class="card-meteo-m">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h3 style="font-size:1.15rem; margin:0;">📅 Próximos 5 Días</h3>
-                    <small style="color:var(--text-muted); font-weight:600;">Toca para ver horas</small>
+            <div class="card-m" id="cardLegalM" style="border-left: 6px solid #38a169;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <h3 id="lblTitLegalM" style="margin:0; font-size:1.05rem;">Evaluación Normativa</h3>
+                    <span id="lblBadgeLegalM" style="background:#edf2f7; padding:3px 8px; border-radius:8px; font-size:0.75rem; font-weight:800;">Entre Ríos</span>
                 </div>
-                <div class="carrusel-pronostico-m" id="carruselPronosticoM"></div>
+                <div id="lblCuerpoLegalM" style="font-size:0.9rem; line-height:1.45; color:#4a5568;">Analizando...</div>
             </div>
 
-            <!-- Módulo Técnico Completo -->
-            <div class="card-meteo-m" id="cardModuloTecnicoM" style="border-left: 5px solid #3182ce;">
-                <h3 id="tituloModuloM" style="font-size:1.15rem; margin-bottom:6px;">🌱 Recomendación Operativa</h3>
-                <div id="contenidoModuloM" style="font-size:0.98rem; line-height:1.5;">Calculando directivas técnicas...</div>
+            <!-- Pronóstico 5 Días -->
+            <div class="card-m">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h3 style="margin:0; font-size:1.05rem;">📅 Próximos 5 Días</h3>
+                    <small style="color:#718096; font-size:0.75rem;">Tocá un día para ver cada 3 hs</small>
+                </div>
+                <div id="cont5DiasM" class="days-scroll-m"></div>
             </div>
-        </main>
+
+            <!-- Intervalos de 3 Horas -->
+            <div class="card-m">
+                <h3 id="lblTitHorasM" style="margin:0 0 10px 0; font-size:1.02rem;">🕒 Intervalos Horarios (Cada 3 Horas)</h3>
+                <div id="contHorasM" class="hours-scroll-m"></div>
+            </div>
+
+            <!-- Recomendaciones Completas e Idénticas a la versión Web -->
+            <div class="card-m">
+                <h3 id="lblTitRolM" style="margin:0 0 12px 0; font-size:1.08rem; color:#1a202c;">🌱 Recomendaciones Operativas</h3>
+                <div id="lblCuerpoRolM"></div>
+            </div>
+        </section>
+
     </div>
 
-    <!-- MODAL FORMATO INVÁLIDO -->
-    <div class="modal-mobile-sheet" id="modalFormatoInvalidoM">
-        <div class="modal-sheet-content" style="text-align:center;">
-            <div class="sheet-handle"></div>
-            <span style="font-size:3rem;">⚠️</span>
-            <h3 style="margin:8px 0; font-size:1.35rem; color:#e53e3e;">Formato de Búsqueda Requerido</h3>
-            <p style="font-size:1rem; color:var(--text-sub); margin-bottom:12px;">
-                Para garantizar la precisión de las 3 APIs y evitar confusiones geográficas, ingresá: <b>Ciudad, Provincia, AR</b>.
-            </p>
-            <div style="background:#ebf8ff; border:1px solid #bee3f8; padding:12px; border-radius:10px; margin-bottom:16px; text-align:left; font-size:0.92rem; color:#2b6cb0;">
-                <b>Ejemplos válidos:</b><br>
-                • <code>Crespo, Entre Ríos, AR</code><br>
-                • <code>Córdoba, Córdoba, AR</code><br>
-                • <code>Rosario, Santa Fe, AR</code>
-            </div>
-            <button class="btn-primario-m" onclick="cerrarModalFormatoInvalidoM()">Corregir Búsqueda</button>
+    <!-- Datalist Completo de Ciudades Argentinas e Internacionales -->
+    <datalist id="datalistCiudadesM">
+        <option value="Crespo, Entre Ríos, AR">
+        <option value="Paraná, Entre Ríos, AR">
+        <option value="Paranacito, Entre Ríos, AR">
+        <option value="Villa Paranacito, Entre Ríos, AR">
+        <option value="Paracao, Entre Ríos, AR">
+        <option value="Concordia, Entre Ríos, AR">
+        <option value="Gualeguaychú, Entre Ríos, AR">
+        <option value="Concepción del Uruguay, Entre Ríos, AR">
+        <option value="Gualeguay, Entre Ríos, AR">
+        <option value="Villaguay, Entre Ríos, AR">
+        <option value="Chajarí, Entre Ríos, AR">
+        <option value="Victoria, Entre Ríos, AR">
+        <option value="La Paz, Entre Ríos, AR">
+        <option value="Nogoyá, Entre Ríos, AR">
+        <option value="Colón, Entre Ríos, AR">
+        <option value="Diamante, Entre Ríos, AR">
+        <option value="Santa Elena, Entre Ríos, AR">
+        <option value="Federal, Entre Ríos, AR">
+        <option value="Rosario del Tala, Entre Ríos, AR">
+        <option value="San Salvador, Entre Ríos, AR">
+        <option value="Viale, Entre Ríos, AR">
+        <option value="Seguí, Entre Ríos, AR">
+        <option value="General Ramírez, Entre Ríos, AR">
+        <option value="Oro Verde, Entre Ríos, AR">
+        <option value="San Benito, Entre Ríos, AR">
+        <option value="Libertador San Martín, Entre Ríos, AR">
+        <option value="Buenos Aires, CABA, AR">
+        <option value="La Plata, Buenos Aires, AR">
+        <option value="Mar del Plata, Buenos Aires, AR">
+        <option value="Bahía Blanca, Buenos Aires, AR">
+        <option value="Santa Fe, Santa Fe, AR">
+        <option value="Rosario, Santa Fe, AR">
+        <option value="Rafaela, Santa Fe, AR">
+        <option value="Venado Tuerto, Santa Fe, AR">
+        <option value="Córdoba, Córdoba, AR">
+        <option value="Río Cuarto, Córdoba, AR">
+        <option value="Villa María, Córdoba, AR">
+        <option value="Corrientes, Corrientes, AR">
+        <option value="Posadas, Misiones, AR">
+        <option value="Resistencia, Chaco, AR">
+        <option value="Formosa, Formosa, AR">
+        <option value="Santiago del Estero, Santiago del Estero, AR">
+        <option value="San Miguel de Tucumán, Tucumán, AR">
+        <option value="Salta, Salta, AR">
+        <option value="San Salvador de Jujuy, Jujuy, AR">
+        <option value="San Fernando del Valle de Catamarca, Catamarca, AR">
+        <option value="La Rioja, La Rioja, AR">
+        <option value="San Juan, San Juan, AR">
+        <option value="Mendoza, Mendoza, AR">
+        <option value="San Luis, San Luis, AR">
+        <option value="Santa Rosa, La Pampa, AR">
+        <option value="Neuquén, Neuquén, AR">
+        <option value="San Carlos de Bariloche, Río Negro, AR">
+        <option value="Rawson, Chubut, AR">
+        <option value="Río Gallegos, Santa Cruz, AR">
+        <option value="Ushuaia, Tierra del Fuego, AR">
+        <option value="São Paulo, São Paulo, BR">
+        <option value="Florianópolis, Santa Catarina, BR">
+        <option value="Montevideo, Montevideo, UY">
+        <option value="Asunción, Central, PY">
+        <option value="Santiago, Metropolitana, CL">
+        <option value="Ciudad de Panamá, Panamá, PA">
+    </datalist>
+
+    <!-- MODAL 1: ESCUDO 2FA MOBILE -->
+    <div id="modal2FAM" class="modal-layer-m">
+        <div class="modal-win-m" id="caja2FAM">
+            <div style="font-size: 3.2rem;">🛡️</div>
+            <h3 style="margin: 6px 0; color: #1a365d;">Verificación de Seguridad (2FA)</h3>
+            <p style="font-size: 0.88rem; color: #4a5568; margin-bottom: 12px;">Ingresá el código numérico en pantalla para confirmar tu acceso:</p>
+            <div id="codigoMuestra2FAM" style="background:#ebf8ff; border:2px dashed #3182ce; color:#2b6cb0; font-size:1.75rem; font-weight:900; letter-spacing:6px; padding:10px; border-radius:12px; margin-bottom:12px;">------</div>
+            <input type="text" id="inputCodigo2FAM" maxlength="6" placeholder="000000" style="width:100%; height:50px; text-align:center; font-size:1.6rem; font-weight:800; letter-spacing:6px; border:2px solid #cbd5e0; border-radius:12px; margin-bottom:10px;">
+            <div id="error2FAM" style="display:none; background:#fff5f5; border:1.5px solid #feb2b2; color:#c53030; padding:10px; border-radius:10px; font-size:0.85rem; font-weight:700; margin-bottom:10px;"></div>
+            <button type="button" id="btnVerif2FAM" onclick="verificar2FAM()" class="btn-submit-m">Verificar e Ingresar 🚀</button>
+            <button type="button" id="btnRegen2FAM" onclick="abrirYGenerar2FAM()" class="btn-submit-m" style="display:none; background:#dd6b20;">🔄 Generar Nuevo Código</button>
+            <button type="button" onclick="cerrarModal2FAM()" style="margin-top:10px; background:none; border:none; color:#718096; font-weight:700; cursor:pointer;">Cancelar</button>
         </div>
     </div>
 
-    <!-- MODAL 2FA -->
-    <div class="modal-mobile-sheet" id="modal2FAMobile">
-        <div class="modal-sheet-content" style="text-align:center;">
-            <div class="sheet-handle"></div>
-            <span style="font-size:3rem;">🛡️</span>
-            <h3 style="margin:8px 0; font-size:1.4rem;">Doble Factor (2FA)</h3>
-            <p style="font-size:1rem; color:var(--text-muted);">Ingresá el código numérico para acceder:</p>
-            <div id="otpMuestraM" style="background:#ebf8ff; color:#2b6cb0; font-size:1.4rem; font-weight:800; padding:10px; border-radius:10px; margin:12px 0;">Código: ------</div>
-            <input type="text" inputmode="numeric" id="inputOtpM" maxlength="6" placeholder="000000" style="font-size:2.2rem; letter-spacing:8px; text-align:center; height:60px; width:100%; border:2px solid #3182ce; border-radius:12px; margin-bottom:12px; background:var(--input-bg); color:var(--text-main);">
-            <div id="errorOtpM" style="display:none; color:#e53e3e; font-weight:700; margin-bottom:10px;"></div>
-            <button class="btn-primario-m" onclick="verificarOtpMobile()">Verificar y Acceder</button>
+    <!-- MODAL 2: RECUPERAR CONTRASEÑA MOBILE -->
+    <div id="modalRecuperarM" class="modal-layer-m" onclick="if(event.target===this) cerrarModalRecuperarM()">
+        <div class="modal-win-m" style="text-align: left;">
+            <div style="text-align:center; margin-bottom:12px;">
+                <div style="font-size:2.6rem;">🔑</div>
+                <h3 style="margin:4px 0; color:#1a365d;">Recuperar Contraseña</h3>
+            </div>
+            <div id="paso1RecM">
+                <div class="form-group-m">
+                    <label>Tu correo registrado:</label>
+                    <input type="email" id="emailRecM" placeholder="tu-correo@ejemplo.com">
+                </div>
+                <button type="button" onclick="solicitarCodigoRecM()" class="btn-submit-m">Enviar Código ➔</button>
+            </div>
+            <div id="paso2RecM" style="display:none;">
+                <div id="avisoCodSimuladoM" style="background:#ebf8ff; border:1.5px dashed #3182ce; color:#2b6cb0; padding:10px; border-radius:10px; font-size:0.85rem; margin-bottom:10px; text-align:center;"></div>
+                <div class="form-group-m">
+                    <label>Código de 6 dígitos:</label>
+                    <input type="text" id="codRecInputM" maxlength="6" placeholder="000000" style="text-align:center; font-weight:800; letter-spacing:4px;">
+                </div>
+                <div class="form-group-m">
+                    <label>Nueva Contraseña (mín. 6, 1 mayúscula y 1 símbolo):</label>
+                    <input type="password" id="nuevaPassRecM" placeholder="Ej: Clima2026#">
+                </div>
+                <button type="button" onclick="confirmarPassRecM()" class="btn-submit-m" style="background:#27ae60;">Guardar Contraseña ✅</button>
+            </div>
+            <div id="msgRecM" style="margin-top:10px; font-weight:700; font-size:0.85rem; text-align:center;"></div>
+            <div style="text-align:center; margin-top:10px;">
+                <button type="button" onclick="cerrarModalRecuperarM()" style="background:none; border:none; color:#718096; font-weight:700; cursor:pointer;">Cerrar</button>
+            </div>
         </div>
     </div>
 
-    <!-- MODAL QUIÉNES SOMOS -->
-    <div class="modal-mobile-sheet" id="modalInfoCorporativoM">
-        <div class="modal-sheet-content">
-            <div class="sheet-handle"></div>
-            <div style="text-align: center; margin-bottom: 14px;">
-                <img src="./img/logoAuraTerra.jpeg?v=7" alt="Logo AuraTerra" style="width: 140px; height: auto; display: block; margin: 0 auto 8px auto; border-radius: 8px;">
-                <h2 style="color:#2b6cb0; margin: 0;">AuraTerra</h2>
+    <!-- MODAL 3: PERFIL, CAMBIO DE NOMBRE Y FAVORITOS PERSONALES -->
+    <div id="modalPerfilFavsM" class="modal-layer-m" onclick="if(event.target===this) cerrarModalPerfilFavoritosM()">
+        <div class="modal-win-m" style="text-align: left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="margin:0; color:#1a365d;">👤 Mi Perfil y Favoritos</h3>
+                <button onclick="cerrarModalPerfilFavoritosM()" style="border:none; background:#edf2f7; border-radius:8px; padding:6px 10px; cursor:pointer;">❌</button>
             </div>
-            <div class="pilar-card-m" style="background:var(--bg-card-alt); border-left:4px solid #3182ce; margin-bottom:10px;">
-                <h4>👥 Quiénes Somos</h4>
-                <p>Plataforma agroclimatológica desarrollada en Entre Ríos por <b>Javier Folmer, Soledad Gareis y Tamara Godoy</b>.</p>
+
+            <div style="font-size:0.8rem; font-weight:800; color:#718096; margin-bottom:6px;">✏️ CAMBIAR MI NOMBRE</div>
+            <div style="display:flex; gap:6px; margin-bottom:14px;">
+                <input type="text" id="inputNombrePerfilM" style="flex:1; height:38px; border-radius:8px; border:1px solid #cbd5e0; padding:0 10px;">
+                <button onclick="guardarNombreUsuarioM()" style="background:#3182ce; color:#fff; border:none; border-radius:8px; padding:0 14px; font-weight:700; cursor:pointer;">Guardar</button>
             </div>
-            <div class="pilar-card-m" style="background:var(--bg-card-alt); border-left:4px solid #38a169; margin-bottom:12px;">
-                <h4>⚙️ Cómo Funciona</h4>
-                <p>Consenso en vivo de 3 APIs (OpenWeatherMap + WeatherAPI + Tomorrow.io) procesado bajo la <b>Ley Provincial Nº 6.599</b> y directivas <b>INTA/BPA</b>.</p>
+
+            <div style="font-size:0.8rem; font-weight:800; color:#718096; margin-bottom:6px;">⭐ MIS FAVORITOS PERSONALIZADOS</div>
+            <div id="listaFavsM" style="max-height:170px; overflow-y:auto; margin-bottom:12px;"></div>
+
+            <div style="background:#f8fafc; padding:10px; border-radius:10px; border:1px solid #e2e8f0; margin-bottom:12px;">
+                <input type="text" id="inputAliasFavM" placeholder="Alias (Ej: Casa, Campo 1)" style="width:100%; height:36px; border-radius:8px; border:1px solid #cbd5e0; padding:0 10px; margin-bottom:6px;">
+                <div style="display:flex; gap:6px;">
+                    <input type="text" id="inputCiudadFavM" list="datalistCiudadesM" placeholder="Ciudad, Provincia, AR" style="flex:1; height:36px; border-radius:8px; border:1px solid #cbd5e0; padding:0 10px;">
+                    <button onclick="agregarFavManualM()" style="background:#27ae60; color:#fff; border:none; border-radius:8px; padding:0 12px; font-weight:700; cursor:pointer;">+ Agregar</button>
+                </div>
             </div>
-            <button class="btn-primario-m" onclick="cerrarModalInfoCorporativoMobile()">Cerrar ⬅</button>
+
+            <button id="btnAbrirAdminM" onclick="abrirModalAdminM()" style="display:none; width:100%; height:40px; background:#2b6cb0; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">
+                ⚙️ Consola de Administrador
+            </button>
         </div>
     </div>
 
-    <!-- MODAL CLIMA POR HORAS -->
-    <div class="modal-mobile-sheet" id="modalHorasMobile">
-        <div class="modal-sheet-content">
-            <div class="sheet-handle"></div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--border-card); padding-bottom:8px; margin-bottom:12px;">
-                <h3 id="tituloModalHorasM" style="margin:0; font-size:1.15rem;">🕒 Detalle por Horas</h3>
-                <button onclick="cerrarModalHorasMobile()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; color:var(--text-main);">❌</button>
+    <!-- MODAL 4: GUARDAR / EDITAR ALIAS CON CHIPS ESTILIZADOS -->
+    <div id="modalAliasM" class="modal-layer-m" onclick="if(event.target===this) cerrarModalAliasM()">
+        <div class="modal-win-m" style="text-align: left;">
+            <h3 id="titModalAliasM" style="margin:0 0 4px 0; color:#1a365d;">⭐ Personalizar Favorito</h3>
+            <small id="subModalAliasM" style="color:#718096; font-weight:700; display:block; margin-bottom:10px;">📍 Crespo, Entre Ríos, AR</small>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
+                <button type="button" onclick="setChipAliasM('🏡 Casa')" style="background:#f7fafc; border:1px solid #cbd5e0; border-radius:14px; padding:5px 10px; font-size:0.8rem; font-weight:700; cursor:pointer;">🏡 Casa</button>
+                <button type="button" onclick="setChipAliasM('🌾 Campo 1')" style="background:#f0fff4; border:1px solid #9ae6b4; border-radius:14px; padding:5px 10px; font-size:0.8rem; font-weight:700; cursor:pointer;">🌾 Campo 1</button>
+                <button type="button" onclick="setChipAliasM('🚜 Lote Norte')" style="background:#f0fff4; border:1px solid #9ae6b4; border-radius:14px; padding:5px 10px; font-size:0.8rem; font-weight:700; cursor:pointer;">🚜 Lote Norte</button>
+                <button type="button" onclick="setChipAliasM('🎪 Predio Eventos')" style="background:#ebf8ff; border:1px solid #90cdf4; border-radius:14px; padding:5px 10px; font-size:0.8rem; font-weight:700; cursor:pointer;">🎪 Predio Eventos</button>
             </div>
-            <div id="listaHorariosDiaContenedor"></div>
+            <input type="text" id="inputModalAliasM" placeholder="Ej: Casa, Campo 1..." style="width:100%; height:44px; border-radius:10px; border:2px solid #3182ce; padding:0 12px; font-weight:700; margin-bottom:14px;">
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+                <button onclick="cerrarModalAliasM()" style="padding:10px 14px; background:#edf2f7; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Cancelar</button>
+                <button onclick="confirmarAliasModalM()" style="padding:10px 18px; background:#3182ce; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Guardar ⭐</button>
+            </div>
         </div>
     </div>
 
-    <!-- MODAL ADMIN MOBILE CON GESTIÓN DE ESTADOS -->
-    <div class="modal-mobile-sheet" id="modalAdminMobile">
-        <div class="modal-sheet-content" style="max-height: 92vh;">
-            <div class="sheet-handle"></div>
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--border-card); padding-bottom:8px; margin-bottom:12px;">
-                <h3 style="margin:0; color:#2b6cb0; font-size:1.25rem;">⚙️ Consola Admin & Auditoría</h3>
-                <button onclick="cerrarModalAdminMobile()" style="background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-main);">❌</button>
+    <!-- MODAL 5: GUÍA DE INSTALACIÓN PWA MOBILE -->
+    <div id="modalInstalarPWAM" class="modal-layer-m" onclick="if(event.target===this) cerrarModalInstalarPWAM()">
+        <div class="modal-win-m" style="text-align: left;">
+            <h3 style="margin:0 0 8px 0; color:#1a365d;">📲 Instalar AuraTerra Mobile (PWA)</h3>
+            <p style="font-size:0.88rem; color:#4a5568; line-height:1.45;">Instalala en tu pantalla de inicio o escritorio para usarla a pantalla completa y con soporte offline en el campo:</p>
+            <div style="background:#f0fff4; border-left:4px solid #38a169; padding:12px; border-radius:10px; font-size:0.86rem; margin-bottom:10px; line-height:1.5;">
+                <b>📱 En Android (Chrome):</b><br>
+                Tocá los tres puntitos <b>(⋮)</b> arriba a la derecha ➔ <b>"Instalar aplicación"</b> o <b>"Agregar a la pantalla principal"</b>.
             </div>
-            <h4 style="margin:10px 0 6px 0; font-size:1.05rem;">👥 Usuarios y Licencias</h4>
-            <div id="listaUsuariosAdminM" style="max-height:240px; overflow-y:auto; border:1px solid var(--border-card); border-radius:10px; padding:8px; margin-bottom:14px; background:var(--bg-card-alt);">Cargando...</div>
-            <h4 style="margin:12px 0 6px 0; font-size:1.05rem;">📊 Ranking Más Consultadas</h4>
-            <div id="rankingConsultasBoxM" style="background:var(--bg-card-alt); border:1px solid var(--border-card); border-radius:10px; padding:10px; font-size:0.95rem; margin-bottom:14px;">Cargando...</div>
-            <h4 style="margin:12px 0 6px 0; font-size:1.05rem;">🕒 Últimos 50 Eventos</h4>
-            <div id="ultimosEventosBoxM" style="max-height:180px; overflow-y:auto; border:1px solid var(--border-card); border-radius:10px; padding:10px; font-size:0.88rem; background:var(--bg-card-alt);">Cargando...</div>
+            <div style="background:#ebf8ff; border-left:4px solid #3182ce; padding:12px; border-radius:10px; font-size:0.86rem; margin-bottom:10px; line-height:1.5;">
+                <b>🍏 En iPhone / iPad (Safari):</b><br>
+                Tocá el ícono <b>Compartir (⬆️)</b> en la barra inferior ➔ <b>"Agregar a inicio"</b>.
+            </div>
+            <div style="background:#f8fafc; border-left:4px solid #805ad5; padding:12px; border-radius:10px; font-size:0.86rem; margin-bottom:14px; line-height:1.5;">
+                <b>💻 En PC (Chrome / Edge):</b><br>
+                Tocá el menú <b>(⋮)</b> ➔ <b>"Guardar y compartir"</b> ➔ <b>"Instalar página como aplicación..."</b>.
+            </div>
+            <button onclick="cerrarModalInstalarPWAM()" class="btn-submit-m">Entendido 👍</button>
         </div>
     </div>
 
-    <script src="./js/app.js"></script>
+    <!-- MODAL 6: INSTITUCIONAL COMPLETO (LOGO) -->
+    <div id="modalInstitucionalM" class="modal-layer-m" onclick="if(event.target===this) cerrarModalInstitucionalM()">
+        <div class="modal-win-m" style="text-align: left;">
+            <div style="text-align:center; margin-bottom:10px;">
+                <img src="./img/logoAuraTerra.jpeg?v=10" alt="Logo" style="max-width:120px; border-radius:10px;">
+                <h3 style="margin:6px 0 0 0; color:#1a365d;">¿Qué es AuraTerra y qué fuentes usa?</h3>
+            </div>
+            <div style="background:#f0fff4; border-left:4px solid #38a169; padding:10px; border-radius:8px; font-size:0.85rem; margin-bottom:8px;">
+                <b>🌾 AuraTerra Agro:</b> Ventanas legales de pulverización bajo la <b>Ley Provincial Nº 6.599 de Entre Ríos (7 a 15 km/h)</b>, estándar INTA/BPA, temperatura de suelo y prevención de deriva.
+            </div>
+            <div style="background:#ebf8ff; border-left:4px solid #3182ce; padding:10px; border-radius:8px; font-size:0.85rem; margin-bottom:8px;">
+                <b>🎪 AuraEvents:</b> Seguridad de carpas y gazebos (&gt;18 km/h), punto de rocío para consolas de sonido y cronograma de Hora Dorada/Azul.
+            </div>
+            <div style="background:#faf5ff; border-left:4px solid #805ad5; padding:10px; border-radius:8px; font-size:0.85rem; margin-bottom:12px;">
+                <b>🛰️ Consenso de 3 APIs Satelitales:</b><br>
+                1. <b>OpenWeatherMap (Principal):</b> Geocodificación y pronóstico de 5 días cada 3 hs.<br>
+                2. <b>WeatherAPI:</b> Precisión en ráfagas y humedad sudamericana.<br>
+                3. <b>Tomorrow.io:</b> Modelo cinético de viento en tiempo real.
+            </div>
+            <button onclick="cerrarModalInstitucionalM()" class="btn-submit-m">Volver al Panel</button>
+        </div>
+    </div>
+
+    <!-- MODAL 7: CONSOLA ADMIN MOBILE -->
+    <div id="modalAdminM" class="modal-layer-m" onclick="if(event.target===this) cerrarModalAdminM()">
+        <div class="modal-win-m" style="text-align: left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="margin:0; color:#2b6cb0;">⚙️ Consola Admin</h3>
+                <button onclick="cerrarModalAdminM()" style="border:none; background:#edf2f7; border-radius:8px; padding:6px 10px; cursor:pointer;">❌</button>
+            </div>
+            <h4 style="margin:8px 0; font-size:0.95rem;">👥 Usuarios, Estados y Roles</h4>
+            <div id="listaUsuariosAdminM" style="max-height:220px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px; padding:8px; margin-bottom:12px; font-size:0.85rem;">Cargando...</div>
+            <h4 style="margin:8px 0; font-size:0.95rem;">📊 Ranking de Interacciones</h4>
+            <div id="rankingAdminM" style="max-height:140px; overflow-y:auto; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:8px; font-size:0.85rem;">Cargando...</div>
+        </div>
+    </div>
+
+    <!-- MODAL 8: FORMATO INVÁLIDO -->
+    <div id="modalFormatoM" class="modal-layer-m">
+        <div class="modal-win-m">
+            <div style="font-size:2.6rem;">⚠️</div>
+            <h3 style="color:#e53e3e; margin:6px 0;">Formato de Ubicación Inválido</h3>
+            <p style="font-size:0.88rem; color:#4a5568;">Ingresá: <b>Ciudad, Provincia, País</b>.<br>Ej: <code>Paraná, Entre Ríos, AR</code></p>
+            <button onclick="document.getElementById('modalFormatoM').classList.remove('activa')" class="btn-submit-m">Entendido</button>
+        </div>
+    </div>
+
+    <!-- MODAL 9: CUENTA SUSPENDIDA -->
+    <div id="modalSuspendidoM" class="modal-layer-m">
+        <div class="modal-win-m">
+            <div style="font-size:2.8rem;">🚫</div>
+            <h3 style="color:#e53e3e; margin:6px 0;">Tu cuenta ha sido suspendida</h3>
+            <p style="font-size:0.88rem; color:#4a5568;">Tu período de prueba de 7 días venció. Comunicate con soporte para activar tu suscripción:</p>
+            <a href="mailto:auraterraclima@hotmail.com?subject=Reactivar%20Cuenta%20AuraTerra" style="display:inline-block; margin:10px 0; padding:10px 16px; background:#e53e3e; color:#fff; border-radius:10px; font-weight:800; text-decoration:none;">✉️ auraterraclima@hotmail.com</a>
+            <button onclick="document.getElementById('modalSuspendidoM').classList.remove('activa')" class="btn-submit-m" style="background:#718096;">Cerrar</button>
+        </div>
+    </div>
+
+    <script src="./js/app.js?v=600"></script>
 </body>
 </html>

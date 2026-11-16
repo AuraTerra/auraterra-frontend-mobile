@@ -1,0 +1,25 @@
+{
+  "id": "/auraterra-frontend-mobile/index.html",
+  "name": "AuraTerra Mobile — Agro & AuraEvents PWA",
+  "short_name": "AuraTerra",
+  "description": "PWA de consenso meteorológico tripartito para el agro (Ley 6.599 ER) y logística de eventos al aire libre.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#1a365d",
+  "theme_color": "#2b6cb0",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%231a365d'/%3E%3Ccircle cx='256' cy='210' r='85' fill='%23ecc94b'/%3E%3Cpath d='M96 360 Q256 260 416 360 L416 430 L96 430 Z' fill='%2338a169'/%3E%3Ctext x='256' y='475' font-family='Arial,sans-serif' font-size='58' font-weight='bold' fill='%23ffffff' text-anchor='middle'%3EAuraTerra%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./img/logoAuraTerra.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    }
+  ]
+}
